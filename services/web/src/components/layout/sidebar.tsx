@@ -15,6 +15,8 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  Wifi,
+  Shield,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
@@ -25,6 +27,8 @@ const navItems = [
   { href: "/documents", label: "Documents", icon: FileText },
   { href: "/home-profile", label: "Home Profile", icon: Building2 },
   { href: "/maintenance", label: "Maintenance", icon: Wrench },
+  { href: "/coverage", label: "Coverage", icon: Shield },
+  { href: "/smart-home", label: "Smart Home", icon: Wifi },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
