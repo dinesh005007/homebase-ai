@@ -1,0 +1,117 @@
+"""RAG query engine: embed question, vector search, assemble prompt, generate answer."""
+
+import time
+from uuid import UUID
+
+import structlog
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from services.api.src.models.document import Document, DocumentChunk
+from services.api.src.services.embeddings import EmbeddingService
+from services.api.src.services.ollama import OllamaClient
+
+logger = structlog.get_logger()
+
+SYSTEM_PROMPT = """You are HomeBase AI, a knowledgeable home assistant.
+Answer the user's question based ONLY on the provided context.
+Always cite your sources with [Source: document_title, page X].
+If the context doesn't contain the answer, say so honestly."""
+
+TOP_K = 5
+
+
+class RAGService:
+    def __init__(
+        self,
+        embedding_service: EmbeddingService | None = None,
+        ollama_client: OllamaClient | None = None,
+    ) -> None:
+        self.embedding_service = embedding_service or EmbeddingService()
+        self.ollama_client = ollama_client or OllamaClient()
+
+    async def ask(
+        self,
+        question: str,
+        property_id: UUID,
+        db: AsyncSession,
+    ) -> dict:
+        start = time.monotonic()
+        logger.info("rag_query_start", question=question[:100], property_id=str(property_id))
+
+        # Embed the question
+        query_embedding = await self.embedding_service.embed_text(question)
+
+        # Vector search for similar chunks
+        embedding_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
+        stmt = text("""
+            SELECT
+                dc.id,
+                dc.document_id,
+                dc.content,
+                dc.page_number,
+                dc.section_header,
+                1 - (dc.embedding <=> :embedding::vector) as similarity
+            FROM document_chunks dc
+            JOIN documents d ON dc.document_id = d.id
+            WHERE d.property_id = :property_id
+            ORDER BY dc.embedding <=> :embedding::vector
+            LIMIT :top_k
+        """)
+        result = await db.execute(
+            stmt,
+            {"embedding": embedding_str, "property_id": property_id, "top_k": TOP_K},
+        )
+        rows = result.fetchall()
+
+        if not rows:
+            latency_ms = int((time.monotonic() - start) * 1000)
+            return {
+                "answer": "I don't have any documents for this property yet. Please upload some documents first.",
+                "sources": [],
+                "model_used": "none",
+                "latency_ms": latency_ms,
+            }
+
+        # Fetch parent document titles for source attribution
+        doc_ids = list({row.document_id for row in rows})
+        docs_result = await db.execute(
+            select(Document.id, Document.title).where(Document.id.in_(doc_ids))
+        )
+        doc_titles = {row.id: row.title for row in docs_result.fetchall()}
+
+        # Assemble context
+        context_parts: list[str] = []
+        sources: list[dict] = []
+        for row in rows:
+            doc_title = doc_titles.get(row.document_id, "Unknown")
+            page_info = f", page {row.page_number}" if row.page_number else ""
+            context_parts.append(
+                f"[Source: {doc_title}{page_info}]\n{row.content}"
+            )
+            sources.append({
+                "title": doc_title,
+                "page": row.page_number,
+                "similarity": round(float(row.similarity), 4),
+            })
+
+        context = "\n\n---\n\n".join(context_parts)
+        prompt = f"Context:\n{context}\n\nQuestion: {question}"
+
+        # Generate answer
+        model = "qwen2.5:7b"
+        answer = await self.ollama_client.generate(
+            prompt=prompt,
+            model=model,
+            system=SYSTEM_PROMPT,
+        )
+
+        latency_ms = int((time.monotonic() - start) * 1000)
+        logger.info("rag_query_complete", latency_ms=latency_ms, sources=len(sources))
+
+        return {
+            "answer": answer,
+            "sources": sources,
+            "model_used": model,
+            "latency_ms": latency_ms,
+        }
