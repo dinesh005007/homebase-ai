@@ -11,6 +11,7 @@ from services.api.src.models.document import Document, DocumentChunk
 from services.api.src.services.embeddings import EmbeddingService
 from services.api.src.services.intent import IntentService
 from services.api.src.services.ollama import OllamaClient
+from services.api.src.services.search import HybridSearchService
 
 logger = structlog.get_logger()
 
@@ -40,6 +41,7 @@ class RAGService:
         self.embedding_service = embedding_service or EmbeddingService()
         self.ollama_client = ollama_client or OllamaClient()
         self.intent_service = IntentService()
+        self.search_service = HybridSearchService(self.embedding_service)
 
     async def ask(
         self,
@@ -74,37 +76,16 @@ class RAGService:
                 "intent": intent,
             }
 
-        # Embed the question
-        query_embedding = await self.embedding_service.embed_text(question)
-
-        # Vector search for similar chunks (with optional doc_type filter)
-        embedding_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
-        doc_type_clause = ""
-        if doc_type_filter:
-            placeholders = ", ".join(f"'{t}'" for t in doc_type_filter)
-            doc_type_clause = f"AND d.doc_type IN ({placeholders})"
-
-        stmt = text(f"""
-            SELECT
-                dc.id,
-                dc.document_id,
-                dc.content,
-                dc.page_number,
-                dc.section_header,
-                1 - (dc.embedding <=> :embedding::vector) as similarity
-            FROM document_chunks dc
-            JOIN documents d ON dc.document_id = d.id
-            WHERE d.property_id = :property_id {doc_type_clause}
-            ORDER BY dc.embedding <=> :embedding::vector
-            LIMIT :top_k
-        """)
-        result = await db.execute(
-            stmt,
-            {"embedding": embedding_str, "property_id": property_id, "top_k": TOP_K},
+        # Hybrid search (semantic + keyword with RRF fusion)
+        search_results = await self.search_service.search(
+            question=question,
+            property_id=property_id,
+            db=db,
+            doc_type_filter=doc_type_filter or None,
+            top_k=TOP_K,
         )
-        rows = result.fetchall()
 
-        if not rows:
+        if not search_results:
             latency_ms = int((time.monotonic() - start) * 1000)
             return {
                 "answer": "I don't have any documents for this property yet. Please upload some documents first.",
@@ -116,9 +97,9 @@ class RAGService:
             }
 
         # Filter out chunks below minimum similarity threshold
-        rows = [r for r in rows if float(r.similarity) >= MIN_SIMILARITY]
+        search_results = [r for r in search_results if r["similarity"] >= MIN_SIMILARITY or r.get("rrf_score", 0) > 0]
 
-        if not rows:
+        if not search_results:
             latency_ms = int((time.monotonic() - start) * 1000)
             logger.info("rag_no_relevant_chunks", property_id=str(property_id))
             return {
@@ -131,11 +112,11 @@ class RAGService:
             }
 
         # Determine confidence based on best similarity score
-        best_similarity = max(float(r.similarity) for r in rows)
+        best_similarity = max(r["similarity"] for r in search_results)
         confidence = "high" if best_similarity >= LOW_CONFIDENCE_THRESHOLD else "low"
 
         # Fetch parent document titles for source attribution
-        doc_ids = list({row.document_id for row in rows})
+        doc_ids = list({r["document_id"] for r in search_results})
         docs_result = await db.execute(
             select(Document.id, Document.title).where(Document.id.in_(doc_ids))
         )
@@ -144,16 +125,16 @@ class RAGService:
         # Assemble context
         context_parts: list[str] = []
         sources: list[dict] = []
-        for row in rows:
-            doc_title = doc_titles.get(row.document_id, "Unknown")
-            page_info = f", page {row.page_number}" if row.page_number else ""
+        for r in search_results:
+            doc_title = doc_titles.get(r["document_id"], "Unknown")
+            page_info = f", page {r['page_number']}" if r["page_number"] else ""
             context_parts.append(
-                f"[Source: {doc_title}{page_info}]\n{row.content}"
+                f"[Source: {doc_title}{page_info}]\n{r['content']}"
             )
             sources.append({
                 "title": doc_title,
-                "page": row.page_number,
-                "similarity": round(float(row.similarity), 4),
+                "page": r["page_number"],
+                "similarity": round(r["similarity"], 4),
             })
 
         context = "\n\n---\n\n".join(context_parts)
