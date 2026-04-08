@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from services.api.src.models.document import Document, DocumentChunk
 from services.api.src.services.classification import ClassificationService
 from services.api.src.services.embeddings import EmbeddingService
+from services.api.src.services.entity_linking import EntityLinkingService
 from services.api.src.services.extraction import ExtractionService
 from services.api.src.utils.text import chunk_text, smart_chunk_text
 
@@ -30,6 +31,7 @@ class IngestionService:
         self.embedding_service = embedding_service or EmbeddingService()
         self.classification_service = classification_service or ClassificationService()
         self.extraction_service = ExtractionService()
+        self.entity_linking_service = EntityLinkingService()
 
     async def ingest_document(
         self,
@@ -121,6 +123,15 @@ class IngestionService:
             )
             db.add(db_chunk)
 
+        # Entity linking
+        entity_links = await self.entity_linking_service.link(
+            text=text,
+            doc_type=doc_type,
+            title=title,
+            document_id=str(doc.id),
+            db=db,
+        )
+
         await db.commit()
         await db.refresh(doc)
 
@@ -128,5 +139,6 @@ class IngestionService:
             "ingestion_complete",
             document_id=str(doc.id),
             chunks_created=len(chunks),
+            entity_links=len(entity_links),
         )
         return doc
