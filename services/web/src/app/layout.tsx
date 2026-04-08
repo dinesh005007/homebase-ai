@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { Sidebar } from "@/components/layout/sidebar";
+import { CommandPalette } from "@/components/shared/command-palette";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "HomeBase AI",
@@ -28,6 +30,13 @@ export default function RootLayout({
               <div className="mx-auto max-w-7xl px-6 py-6">{children}</div>
             </main>
           </div>
+          <CommandPalette />
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              className: "bg-card text-card-foreground border-border",
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>
