@@ -122,7 +122,6 @@ async def delete_task(
 
 
 PRESETS_DIR = Path("config/maintenance-presets")
-CURRENT_MONTH = date.today().month
 SEASONS_BY_MONTH = {1: "winter", 2: "winter", 3: "spring", 4: "spring", 5: "spring",
                     6: "summer", 7: "summer", 8: "summer", 9: "fall", 10: "fall",
                     11: "fall", 12: "winter"}
@@ -140,7 +139,7 @@ async def seed_from_preset(
         raise HTTPException(status_code=404, detail=f"Preset '{preset}' not found")
 
     data = json.loads(preset_path.read_text())
-    current_season = SEASONS_BY_MONTH.get(CURRENT_MONTH, "spring")
+    current_season = SEASONS_BY_MONTH.get(date.today().month, "spring")
     season_data = data.get("seasons", {}).get(current_season, {})
     tasks_data = season_data.get("tasks", [])
 

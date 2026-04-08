@@ -1,16 +1,20 @@
 """Pydantic schemas for maintenance endpoints."""
 
 from datetime import date, datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
+
+TaskStatus = Literal["pending", "in_progress", "completed"]
+TaskPriority = Literal["low", "medium", "high"]
 
 
 class MaintenanceTaskCreate(BaseModel):
     property_id: UUID
     title: str
     description: str | None = None
-    priority: str = "medium"
+    priority: TaskPriority = "medium"
     system: str | None = None
     room: str | None = None
     due_date: date | None = None
@@ -21,8 +25,8 @@ class MaintenanceTaskCreate(BaseModel):
 class MaintenanceTaskUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
-    status: str | None = None
-    priority: str | None = None
+    status: TaskStatus | None = None
+    priority: TaskPriority | None = None
     system: str | None = None
     room: str | None = None
     due_date: date | None = None

@@ -122,8 +122,12 @@ async def _get_warranty_status(
 async def _get_asset_info(
     property_id: UUID, asset_name: str, db: AsyncSession
 ) -> str:
+    from services.api.src.models.document import Document
     result = await db.execute(
-        select(DocumentEntityLink).where(
+        select(DocumentEntityLink)
+        .join(Document, DocumentEntityLink.document_id == Document.id)
+        .where(
+            Document.property_id == property_id,
             DocumentEntityLink.entity_type == "asset",
             DocumentEntityLink.entity_name.ilike(f"%{asset_name}%"),
         ).limit(5)
