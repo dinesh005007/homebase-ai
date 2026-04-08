@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from services.api.src.models.document import Document, DocumentChunk
 from services.api.src.services.classification import ClassificationService
 from services.api.src.services.embeddings import EmbeddingService
+from services.api.src.services.extraction import ExtractionService
 from services.api.src.utils.text import chunk_text, smart_chunk_text
 
 logger = structlog.get_logger()
@@ -28,6 +29,7 @@ class IngestionService:
     ) -> None:
         self.embedding_service = embedding_service or EmbeddingService()
         self.classification_service = classification_service or ClassificationService()
+        self.extraction_service = ExtractionService()
 
     async def ingest_document(
         self,
@@ -81,6 +83,16 @@ class IngestionService:
         chunk_texts = [c["content"] for c in chunks]
         embeddings = await self.embedding_service.embed_chunks(chunk_texts) if chunk_texts else []
 
+        # Extract structured fields based on document type
+        extracted_fields = await self.extraction_service.extract(text, doc_type)
+
+        # Build metadata
+        doc_metadata: dict = {}
+        if classification_confidence is not None:
+            doc_metadata["classification_confidence"] = classification_confidence
+        if extracted_fields:
+            doc_metadata["extracted_fields"] = extracted_fields
+
         # Create Document record
         doc = Document(
             property_id=property_id,
@@ -92,11 +104,7 @@ class IngestionService:
             page_count=page_count,
             ocr_text_summary=text[:500] if text else None,
             ingested_at=datetime.now(timezone.utc),
-            metadata_={
-                k: v for k, v in {
-                    "classification_confidence": classification_confidence,
-                }.items() if v is not None
-            },
+            metadata_=doc_metadata,
         )
         db.add(doc)
         await db.flush()
