@@ -41,6 +41,7 @@ class IngestionService:
         doc_type: str,
         title: str,
         db: AsyncSession,
+        description: str | None = None,
     ) -> Document:
         logger.info("ingestion_start", filename=filename, property_id=str(property_id))
 
@@ -64,9 +65,13 @@ class IngestionService:
                 logger.warning("low_text_extraction", chars_per_page=chars_per_page, filename=filename)
 
         # Auto-classify if doc_type is "auto" or not provided
+        # Use user description as hint for better classification
         classification_confidence = None
         if doc_type == "auto" or not doc_type:
-            result = await self.classification_service.classify(text)
+            classify_input = text
+            if description:
+                classify_input = f"User says this document is: {description}\n\n{text}"
+            result = await self.classification_service.classify(classify_input)
             doc_type = result["doc_type"]
             classification_confidence = result["confidence"]
             logger.info("auto_classified", doc_type=doc_type, confidence=classification_confidence)
@@ -99,6 +104,7 @@ class IngestionService:
         doc = Document(
             property_id=property_id,
             title=title,
+            description=description,
             doc_type=doc_type,
             file_path=str(dest_path),
             file_size_bytes=file_size,

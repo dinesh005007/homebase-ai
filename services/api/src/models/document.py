@@ -17,6 +17,7 @@ class Document(TimestampMixin, Base):
     )
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     doc_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
     file_path: Mapped[str | None] = mapped_column(Text)
     file_size_bytes: Mapped[int | None] = mapped_column(Integer)
     mime_type: Mapped[str | None] = mapped_column(String(100))

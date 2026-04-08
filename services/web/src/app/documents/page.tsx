@@ -48,7 +48,8 @@ export default function DocumentsPage() {
 
   // Upload state
   const [title, setTitle] = useState("");
-  const [docType, setDocType] = useState("warranty");
+  const [description, setDescription] = useState("");
+  const [docType, setDocType] = useState("auto");
   const [dragOver, setDragOver] = useState(false);
 
   const loadDocuments = useCallback(async () => {
@@ -71,11 +72,14 @@ export default function DocumentsPage() {
     formData.append("property_id", propertyId);
     formData.append("doc_type", docType);
     formData.append("title", title);
+    if (description) formData.append("description", description);
 
     try {
       const res = await api.uploadDocument(formData);
-      setUploadResult(`${res.chunks_created} chunks indexed`);
+      const typeLabel = docType === "auto" ? ` (classified as ${res.doc_type})` : "";
+      setUploadResult(`${res.chunks_created} chunks indexed${typeLabel}`);
       setTitle("");
+      setDescription("");
       loadDocuments();
     } catch (err) {
       setUploadResult(
@@ -149,6 +153,7 @@ export default function DocumentsPage() {
                 onChange={(e) => setDocType(e.target.value)}
                 className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
               >
+                <option value="auto">Auto-detect</option>
                 {DOC_TYPES.filter((t) => t.value !== "all").map((t) => (
                   <option key={t.value} value={t.value}>
                     {t.label}
@@ -156,6 +161,13 @@ export default function DocumentsPage() {
                 ))}
               </select>
             </div>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What is this document about? (e.g., 'Taylor Morrison 10-year structural warranty for foundation and roof')"
+              rows={2}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+            />
             <label className="flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-3 text-sm text-muted-foreground hover:border-primary/30 transition-colors duration-150 cursor-pointer">
               <Upload className="h-4 w-4" />
               <span>Choose PDF or drag & drop</span>

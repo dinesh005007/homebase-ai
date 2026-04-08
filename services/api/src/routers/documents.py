@@ -32,6 +32,7 @@ async def upload_document(
     property_id: UUID = Form(...),
     doc_type: str = Form("auto"),
     title: str = Form(...),
+    description: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ) -> DocumentUploadResponse:
     # Write uploaded file to temp location
@@ -47,6 +48,7 @@ async def upload_document(
         property_id=property_id,
         doc_type=doc_type,
         title=title,
+        description=description or None,
         db=db,
     )
 
