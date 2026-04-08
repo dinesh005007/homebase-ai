@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.api.src.models.document import Document, DocumentChunk
 from services.api.src.services.embeddings import EmbeddingService
+from services.api.src.services.intent import IntentService
 from services.api.src.services.ollama import OllamaClient
 
 logger = structlog.get_logger()
@@ -38,6 +39,7 @@ class RAGService:
     ) -> None:
         self.embedding_service = embedding_service or EmbeddingService()
         self.ollama_client = ollama_client or OllamaClient()
+        self.intent_service = IntentService()
 
     async def ask(
         self,
@@ -48,12 +50,41 @@ class RAGService:
         start = time.monotonic()
         logger.info("rag_query_start", question=question[:100], property_id=str(property_id))
 
+        # Classify intent
+        intent_result = await self.intent_service.classify(question)
+        intent = intent_result["intent"]
+        doc_type_filter = intent_result["doc_type_filter"]
+
+        # Emergency: return safety instructions immediately
+        if intent == "emergency":
+            latency_ms = int((time.monotonic() - start) * 1000)
+            return {
+                "answer": (
+                    "**EMERGENCY DETECTED — Take immediate action:**\n\n"
+                    "1. **Gas smell**: Leave the house immediately. Do NOT use switches/phones inside. Call 911 and your gas company from outside.\n"
+                    "2. **Fire**: Evacuate everyone. Call 911. Do NOT re-enter.\n"
+                    "3. **Flooding**: Turn off water main if safe. Turn off electricity to affected areas. Call a plumber.\n"
+                    "4. **Electrical shock/sparks**: Do NOT touch. Turn off breaker if safe. Call 911.\n\n"
+                    "After ensuring safety, contact your insurance company to file a claim."
+                ),
+                "sources": [],
+                "model_used": "safety_engine",
+                "latency_ms": latency_ms,
+                "confidence": "high",
+                "intent": intent,
+            }
+
         # Embed the question
         query_embedding = await self.embedding_service.embed_text(question)
 
-        # Vector search for similar chunks
+        # Vector search for similar chunks (with optional doc_type filter)
         embedding_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
-        stmt = text("""
+        doc_type_clause = ""
+        if doc_type_filter:
+            placeholders = ", ".join(f"'{t}'" for t in doc_type_filter)
+            doc_type_clause = f"AND d.doc_type IN ({placeholders})"
+
+        stmt = text(f"""
             SELECT
                 dc.id,
                 dc.document_id,
@@ -63,7 +94,7 @@ class RAGService:
                 1 - (dc.embedding <=> :embedding::vector) as similarity
             FROM document_chunks dc
             JOIN documents d ON dc.document_id = d.id
-            WHERE d.property_id = :property_id
+            WHERE d.property_id = :property_id {doc_type_clause}
             ORDER BY dc.embedding <=> :embedding::vector
             LIMIT :top_k
         """)
@@ -81,6 +112,7 @@ class RAGService:
                 "model_used": "none",
                 "latency_ms": latency_ms,
                 "confidence": "none",
+                "intent": intent,
             }
 
         # Filter out chunks below minimum similarity threshold
@@ -95,6 +127,7 @@ class RAGService:
                 "model_used": "none",
                 "latency_ms": latency_ms,
                 "confidence": "none",
+                "intent": intent,
             }
 
         # Determine confidence based on best similarity score
@@ -156,4 +189,5 @@ class RAGService:
             "model_used": model,
             "latency_ms": latency_ms,
             "confidence": confidence,
+            "intent": intent,
         }

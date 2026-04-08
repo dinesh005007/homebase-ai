@@ -22,3 +22,4 @@ class AskResponse(BaseModel):
     model_used: str
     latency_ms: int
     confidence: str
+    intent: str | None = None
