@@ -5,6 +5,7 @@ import json
 import structlog
 
 from services.api.src.services.ollama import OllamaClient
+from services.api.src.services.router import get_model_router
 
 logger = structlog.get_logger()
 
@@ -52,6 +53,7 @@ Document text:
 class ExtractionService:
     def __init__(self, client: OllamaClient | None = None) -> None:
         self.client = client or OllamaClient()
+        self._model = get_model_router().get_model_name("extractor")
 
     async def extract(self, text: str, doc_type: str) -> dict | None:
         """Extract structured fields from document text based on its type.
@@ -78,7 +80,7 @@ class ExtractionService:
         try:
             raw = await self.client.generate(
                 prompt=prompt,
-                model="gemma3:4b",
+                model=self._model,
             )
 
             result = json.loads(raw.strip())

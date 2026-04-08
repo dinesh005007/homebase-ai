@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.api.src.models.document_entity_link import DocumentEntityLink
 from services.api.src.services.ollama import OllamaClient
+from services.api.src.services.router import get_model_router
 
 logger = structlog.get_logger()
 
@@ -37,6 +38,7 @@ Document text (first 1000 chars):
 class EntityLinkingService:
     def __init__(self, client: OllamaClient | None = None) -> None:
         self.client = client or OllamaClient()
+        self._model = get_model_router().get_model_name("classifier")
 
     async def link(
         self,
@@ -60,7 +62,7 @@ class EntityLinkingService:
         try:
             raw = await self.client.generate(
                 prompt=prompt,
-                model="gemma3:4b",
+                model=self._model,
             )
 
             links = json.loads(raw.strip())

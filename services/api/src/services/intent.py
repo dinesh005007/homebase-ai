@@ -5,6 +5,7 @@ import json
 import structlog
 
 from services.api.src.services.ollama import OllamaClient
+from services.api.src.services.router import get_model_router
 
 logger = structlog.get_logger()
 
@@ -51,6 +52,7 @@ Question: {question}"""
 class IntentService:
     def __init__(self, client: OllamaClient | None = None) -> None:
         self.client = client or OllamaClient()
+        self._model = get_model_router().get_model_name("classifier")
 
     async def classify(self, question: str) -> dict:
         """Classify a user question into an intent.
@@ -63,7 +65,7 @@ class IntentService:
         )
 
         try:
-            raw = await self.client.generate(prompt=prompt, model="gemma3:4b")
+            raw = await self.client.generate(prompt=prompt, model=self._model)
             result = json.loads(raw.strip())
             intent = result.get("intent", "general_home")
             confidence = max(0.0, min(1.0, float(result.get("confidence", 0.5))))

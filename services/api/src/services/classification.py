@@ -5,6 +5,7 @@ import json
 import structlog
 
 from services.api.src.services.ollama import OllamaClient
+from services.api.src.services.router import get_model_router
 
 logger = structlog.get_logger()
 
@@ -38,6 +39,7 @@ Document text:
 class ClassificationService:
     def __init__(self, client: OllamaClient | None = None) -> None:
         self.client = client or OllamaClient()
+        self._model = get_model_router().get_model_name("classifier")
 
     async def classify(self, text: str) -> dict[str, str | float]:
         """Classify document text into a type with confidence score.
@@ -57,7 +59,7 @@ class ClassificationService:
         try:
             raw = await self.client.generate(
                 prompt=prompt,
-                model="gemma3:4b",
+                model=self._model,
             )
 
             result = json.loads(raw.strip())
