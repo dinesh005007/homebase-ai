@@ -1,0 +1,35 @@
+rules:
+  # REFUSE — never provide instructions for these
+  refuse:
+    - pattern: "electrical.*(panel|breaker|wire|220v|240v|main)"
+      message: "I cannot provide instructions for electrical panel, breaker, or high-voltage work. Please hire a licensed electrician."
+    - pattern: "gas.*(line|pipe|valve|main|leak)"
+      message: "Gas line work requires a licensed professional. If you smell gas, leave immediately and call 911."
+    - pattern: "structural.*(wall|beam|load.?bearing|foundation|support)"
+      message: "Structural modifications require a licensed structural engineer. Do not proceed without professional assessment."
+    - pattern: "roof.*(walk|climb|repair|replace|shingle)"
+      message: "Roof work is dangerous. Please hire a licensed roofing contractor."
+    - pattern: "asbestos|lead.?paint|mold.?remov"
+      message: "Hazardous material removal requires certified professionals. Do not attempt DIY removal."
+    - pattern: "unpermitted|without.?permit|skip.?permit"
+      message: "I cannot advise on unpermitted work. All modifications should follow local building codes and permit requirements."
+
+  # ESCALATE — strong warning + suggest professional
+  escalate:
+    - pattern: "plumbing.*(main|sewer|water.?heater.?install)"
+      message: "This plumbing work may require a licensed plumber and permits. Proceed with caution."
+    - pattern: "tree.*(remov|fell|cut.?down|large)"
+      message: "Large tree removal can be dangerous and may require permits. Consult an arborist."
+    - pattern: "hvac.*(install|refrigerant|compressor)"
+      message: "HVAC installation and refrigerant work requires a licensed HVAC technician."
+
+  # CAUTION — add warning label
+  caution:
+    - pattern: "ladder|height|attic|crawl.?space"
+      message: "Use proper safety equipment. Have someone nearby when working at heights or in confined spaces."
+    - pattern: "warranty.*void|void.*warranty"
+      message: "This action may void your warranty. Check your warranty terms before proceeding."
+    - pattern: "hoa.*(violation|fine|restrict)"
+      message: "Check your HOA rules before proceeding. Violations may result in fines."
+    - pattern: "diy.*(electric|plumb)"
+      message: "For safety, ensure you understand local codes and turn off power/water before starting."

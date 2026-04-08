@@ -11,6 +11,7 @@ from services.api.src.models.document import Document, DocumentChunk
 from services.api.src.services.embeddings import EmbeddingService
 from services.api.src.services.intent import IntentService
 from services.api.src.services.ollama import OllamaClient
+from services.api.src.services.safety import get_safety_engine
 from services.api.src.services.search import HybridSearchService
 
 logger = structlog.get_logger()
@@ -155,6 +156,12 @@ class RAGService:
                 "This answer may not be fully accurate.\n\n" + answer
             )
 
+        # Post-generation safety check
+        safety = get_safety_engine().evaluate(question, answer)
+        safety_level = safety["level"]
+        if safety["modified_answer"]:
+            answer = safety["modified_answer"]
+
         latency_ms = int((time.monotonic() - start) * 1000)
         logger.info(
             "rag_query_complete",
@@ -162,6 +169,7 @@ class RAGService:
             sources=len(sources),
             best_similarity=best_similarity,
             confidence=confidence,
+            safety_level=safety_level,
         )
 
         return {
@@ -171,4 +179,5 @@ class RAGService:
             "latency_ms": latency_ms,
             "confidence": confidence,
             "intent": intent,
+            "safety_level": safety_level,
         }
