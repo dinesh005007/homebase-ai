@@ -67,3 +67,61 @@ def chunk_text(
         for i, chunk in enumerate(raw_chunks)
         if chunk.strip()
     ]
+
+
+# Section patterns for document-type-aware chunking
+_SECTION_PATTERNS: dict[str, list[str]] = {
+    "insurance_policy": [
+        "declarations", "coverage", "exclusions", "endorsements",
+        "conditions", "definitions", "limits", "deductible",
+    ],
+    "warranty": [
+        "coverage", "exclusions", "limitations", "claim",
+        "maintenance", "contact", "duration", "transferability",
+    ],
+    "hoa_ccr": [
+        "architectural", "restrictions", "fees", "assessment",
+        "enforcement", "meetings", "voting", "amendments",
+        "maintenance", "common area", "parking", "landscaping",
+    ],
+    "manual": [
+        "installation", "operation", "troubleshooting", "maintenance",
+        "parts", "specifications", "warranty", "safety", "model",
+    ],
+}
+
+
+def _detect_section(text: str, doc_type: str) -> str | None:
+    """Detect which section a chunk belongs to based on document type."""
+    patterns = _SECTION_PATTERNS.get(doc_type, [])
+    text_lower = text[:200].lower()
+    for pattern in patterns:
+        if pattern in text_lower:
+            return pattern
+    return None
+
+
+def smart_chunk_text(
+    text: str,
+    doc_type: str,
+    chunk_size: int = 800,
+    overlap: int = 200,
+) -> list[dict]:
+    """Document-type-aware chunking with section detection.
+
+    Returns list of {content, chunk_index, token_count, section_header}.
+    """
+    raw_chunks = _split_text(text, ["\n\n", "\n", ". ", " "], chunk_size, overlap)
+
+    results: list[dict] = []
+    for i, chunk in enumerate(raw_chunks):
+        if not chunk.strip():
+            continue
+        section = _detect_section(chunk, doc_type)
+        results.append({
+            "content": chunk,
+            "chunk_index": i,
+            "token_count": _approx_token_count(chunk),
+            "section_header": section,
+        })
+    return results

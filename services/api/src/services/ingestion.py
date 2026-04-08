@@ -109,6 +109,7 @@ class IngestionService:
                 content=chunk["content"],
                 token_count=chunk["token_count"],
                 embedding=embedding,
+                section_header=chunk.get("section_header"),
             )
             db.add(db_chunk)
 
