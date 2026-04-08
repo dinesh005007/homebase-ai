@@ -129,7 +129,9 @@ async def _get_asset_info(
         .where(
             Document.property_id == property_id,
             DocumentEntityLink.entity_type == "asset",
-            DocumentEntityLink.entity_name.ilike(f"%{asset_name}%"),
+            DocumentEntityLink.entity_name.ilike(
+                f"%{asset_name.replace('%', r'\\%').replace('_', r'\\_')}%"
+            ),
         ).limit(5)
     )
     links = result.scalars().all()

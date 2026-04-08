@@ -49,6 +49,10 @@ async def sensor_history(
     return await ha.get_history(entity_id, hours)
 
 
+ALLOWED_HA_DOMAINS = {"light", "switch", "climate", "fan", "cover", "lock", "media_player", "scene", "input_boolean"}
+BLOCKED_HA_DOMAINS = {"homeassistant", "automation", "script", "shell_command", "persistent_notification"}
+
+
 @router.post("/action", response_model=SmartHomeActionResponse)
 async def execute_action(
     request: SmartHomeActionRequest,
@@ -56,6 +60,12 @@ async def execute_action(
 ) -> SmartHomeActionResponse:
     if not ha.configured:
         return SmartHomeActionResponse(success=False, message="Home Assistant not configured")
+
+    if request.domain in BLOCKED_HA_DOMAINS:
+        return SmartHomeActionResponse(success=False, message=f"Domain '{request.domain}' is blocked for safety")
+
+    if request.domain not in ALLOWED_HA_DOMAINS:
+        return SmartHomeActionResponse(success=False, message=f"Domain '{request.domain}' is not in the allowed list")
 
     data = request.data or {}
     if request.entity_id:
