@@ -8,6 +8,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.api.src.models.document import Document, DocumentChunk
+from services.api.src.services.context import ContextAssemblyService
 from services.api.src.services.embeddings import EmbeddingService
 from services.api.src.services.intent import IntentService
 from services.api.src.services.ollama import OllamaClient
@@ -43,6 +44,7 @@ class RAGService:
         self.ollama_client = ollama_client or OllamaClient()
         self.intent_service = IntentService()
         self.search_service = HybridSearchService(self.embedding_service)
+        self.context_service = ContextAssemblyService()
 
     async def ask(
         self,
@@ -139,7 +141,11 @@ class RAGService:
             })
 
         context = "\n\n---\n\n".join(context_parts)
-        prompt = f"Context:\n{context}\n\nQuestion: {question}"
+
+        # Assemble home graph context
+        home_context = await self.context_service.build_context(property_id, db)
+
+        prompt = f"Home Profile:\n{home_context}\n\nDocument Context:\n{context}\n\nQuestion: {question}"
 
         # Generate answer
         model = "qwen2.5:7b"
