@@ -21,3 +21,4 @@ class AskResponse(BaseModel):
     sources: list[AskSource]
     model_used: str
     latency_ms: int
+    confidence: str

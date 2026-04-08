@@ -46,6 +46,7 @@ export interface AskResponse {
   sources: AskSource[];
   model_used: string;
   latency_ms: number;
+  confidence: string;
 }
 
 export const api = {

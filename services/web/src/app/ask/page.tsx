@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Bot, User, FileText, Loader2 } from "lucide-react";
+import { Send, Bot, User, FileText, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, type AskResponse } from "@/lib/api";
 
@@ -13,6 +13,7 @@ interface Message {
   sources?: AskResponse["sources"];
   model?: string;
   latency?: number;
+  confidence?: string;
 }
 
 const PROPERTY_ID = typeof window !== "undefined"
@@ -56,6 +57,7 @@ export default function AskPage() {
         sources: res.sources,
         model: res.model_used,
         latency: res.latency_ms,
+        confidence: res.confidence,
       };
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err) {
@@ -166,9 +168,23 @@ export default function AskPage() {
                   </div>
                 )}
                 {msg.model && (
-                  <p className="mt-2 text-[10px] text-muted-foreground">
-                    {msg.model} &middot; {msg.latency}ms
-                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    {msg.confidence === "low" && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-500">
+                        <AlertTriangle className="h-2.5 w-2.5" />
+                        Low confidence
+                      </span>
+                    )}
+                    {msg.confidence === "high" && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-500">
+                        <ShieldCheck className="h-2.5 w-2.5" />
+                        Verified sources
+                      </span>
+                    )}
+                    <span className="text-[10px] text-muted-foreground">
+                      {msg.model} &middot; {msg.latency}ms
+                    </span>
+                  </div>
                 )}
               </div>
               {msg.role === "user" && (
