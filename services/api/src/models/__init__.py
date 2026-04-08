@@ -6,6 +6,7 @@ from services.api.src.models.conversation import Conversation
 from services.api.src.models.maintenance import MaintenanceTask, MaintenanceSchedule
 from services.api.src.models.smarthome import SensorReading, Alert
 from services.api.src.models.coverage import Warranty, InsurancePolicy
+from services.api.src.models.audit import AuditEvent, AIRun
 
 __all__ = [
     "Base", "Property", "Document", "DocumentChunk",
@@ -13,4 +14,5 @@ __all__ = [
     "MaintenanceTask", "MaintenanceSchedule",
     "SensorReading", "Alert",
     "Warranty", "InsurancePolicy",
+    "AuditEvent", "AIRun",
 ]
