@@ -1,0 +1,48 @@
+from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
+
+import structlog
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+
+from services.api.src.config import settings
+from services.api.src.database import engine
+from services.api.src.routers import health
+
+logger = structlog.get_logger()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    # Startup: verify database connection
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("SELECT 1"))
+        logger.info("database_connected", url=settings.DATABASE_URL.split("@")[-1])
+    except Exception as e:
+        logger.error("database_connection_failed", error=str(e))
+
+    yield
+
+    # Shutdown
+    await engine.dispose()
+    logger.info("shutdown_complete")
+
+
+app = FastAPI(
+    title="HomeBase AI",
+    description="Local-first family home operating system",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(health.router)

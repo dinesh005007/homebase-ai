@@ -1,0 +1,13 @@
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    DATABASE_URL: str = "postgresql+asyncpg://homebase:change_me_in_production@localhost:5432/homebase"
+    OLLAMA_HOST: str = "http://localhost:11434"
+    REDIS_URL: str = "redis://localhost:6379/0"
+    LOG_LEVEL: str = "INFO"
+
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+
+
+settings = Settings()
