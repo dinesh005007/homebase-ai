@@ -1,0 +1,50 @@
+{
+  "region": "North Texas (DFW)",
+  "climate_zone": "3A",
+  "soil_type": "clay",
+  "seasons": {
+    "spring": {
+      "months": [3, 4, 5],
+      "tasks": [
+        {"title": "HVAC spring tune-up", "system": "HVAC", "priority": "high", "rrule": "FREQ=YEARLY;BYMONTH=3", "description": "Schedule professional AC inspection before summer heat. Check refrigerant, clean coils, replace filter."},
+        {"title": "Irrigation system startup", "system": "Irrigation", "priority": "high", "rrule": "FREQ=YEARLY;BYMONTH=3", "description": "Turn on irrigation, check for broken heads, adjust zones for spring growth."},
+        {"title": "Foundation watering check", "system": "Foundation", "priority": "high", "rrule": "FREQ=YEARLY;BYMONTH=4", "description": "North Texas clay soil shrinks in heat. Verify soaker hoses around foundation are working. Maintain consistent moisture."},
+        {"title": "Gutter cleaning (post-storm)", "system": "Exterior", "priority": "medium", "rrule": "FREQ=YEARLY;BYMONTH=4", "description": "Clear gutters and downspouts after spring storms. Check for hail damage."},
+        {"title": "Lawn fertilization (spring)", "system": "Landscaping", "priority": "medium", "rrule": "FREQ=YEARLY;BYMONTH=4", "description": "Apply pre-emergent and fertilizer for Bermuda/St. Augustine. North Texas lawns need early spring feeding."},
+        {"title": "Smoke detector battery test", "system": "Safety", "priority": "high", "rrule": "FREQ=YEARLY;BYMONTH=3", "description": "Test all smoke and CO detectors. Replace batteries if needed."},
+        {"title": "Check for hail damage", "system": "Exterior", "priority": "high", "rrule": "FREQ=YEARLY;BYMONTH=5", "description": "After spring storm season, inspect roof, siding, windows, and fencing for hail damage. Document for insurance."}
+      ]
+    },
+    "summer": {
+      "months": [6, 7, 8],
+      "tasks": [
+        {"title": "HVAC filter change", "system": "HVAC", "priority": "high", "rrule": "FREQ=MONTHLY;BYMONTH=6,7,8", "description": "Replace HVAC filter monthly during peak summer. Texas heat means AC runs constantly."},
+        {"title": "Foundation watering (summer)", "system": "Foundation", "priority": "high", "rrule": "FREQ=WEEKLY;BYMONTH=6,7,8", "description": "Water foundation 3-4 times per week during 100°F+ heat. Clay soil cracks cause foundation movement."},
+        {"title": "Irrigation audit", "system": "Irrigation", "priority": "medium", "rrule": "FREQ=YEARLY;BYMONTH=7", "description": "Check irrigation coverage, fix broken heads, adjust schedules for water restrictions."},
+        {"title": "Attic insulation check", "system": "HVAC", "priority": "medium", "rrule": "FREQ=YEARLY;BYMONTH=6", "description": "Verify attic insulation is intact. North Texas attics can reach 150°F."},
+        {"title": "Exterior paint/caulk inspection", "system": "Exterior", "priority": "low", "rrule": "FREQ=YEARLY;BYMONTH=6", "description": "Check for peeling paint, cracked caulk around windows and doors."}
+      ]
+    },
+    "fall": {
+      "months": [9, 10, 11],
+      "tasks": [
+        {"title": "HVAC fall tune-up (heating)", "system": "HVAC", "priority": "high", "rrule": "FREQ=YEARLY;BYMONTH=10", "description": "Schedule furnace inspection before winter. Test heating, check gas connections."},
+        {"title": "Gutter cleaning (fall leaves)", "system": "Exterior", "priority": "medium", "rrule": "FREQ=YEARLY;BYMONTH=11", "description": "Clear gutters of fallen leaves before winter rains."},
+        {"title": "Irrigation winterization", "system": "Irrigation", "priority": "high", "rrule": "FREQ=YEARLY;BYMONTH=11", "description": "Blow out irrigation lines before first freeze. Insulate backflow preventer."},
+        {"title": "Lawn winter prep", "system": "Landscaping", "priority": "medium", "rrule": "FREQ=YEARLY;BYMONTH=10", "description": "Apply winterizer fertilizer. Last mow at slightly lower height."},
+        {"title": "Weather stripping check", "system": "Exterior", "priority": "medium", "rrule": "FREQ=YEARLY;BYMONTH=10", "description": "Check weather stripping on all exterior doors. Replace if worn."},
+        {"title": "Fireplace/chimney inspection", "system": "HVAC", "priority": "medium", "rrule": "FREQ=YEARLY;BYMONTH=10", "description": "If applicable, have chimney inspected and cleaned before first use."}
+      ]
+    },
+    "winter": {
+      "months": [12, 1, 2],
+      "tasks": [
+        {"title": "Freeze preparation", "system": "Plumbing", "priority": "high", "rrule": "FREQ=YEARLY;BYMONTH=12", "description": "Insulate exposed pipes, disconnect garden hoses, cover outdoor faucets. Know water shutoff location."},
+        {"title": "HVAC filter change", "system": "HVAC", "priority": "medium", "rrule": "FREQ=MONTHLY;BYMONTH=12,1,2", "description": "Replace HVAC filter. Heating system runs more in cold months."},
+        {"title": "Water heater flush", "system": "Plumbing", "priority": "medium", "rrule": "FREQ=YEARLY;BYMONTH=1", "description": "Drain and flush water heater to remove sediment buildup."},
+        {"title": "Garage door maintenance", "system": "Exterior", "priority": "low", "rrule": "FREQ=YEARLY;BYMONTH=1", "description": "Lubricate garage door tracks, test auto-reverse safety feature."},
+        {"title": "Check for ice dam risk", "system": "Exterior", "priority": "medium", "rrule": "FREQ=YEARLY;BYMONTH=12", "description": "After rare North Texas ice storms, check for ice buildup on roof edges and gutters."}
+      ]
+    }
+  }
+}

@@ -1,6 +1,8 @@
 """Maintenance task CRUD endpoints."""
 
-from datetime import datetime, timezone
+import json
+from datetime import date, datetime, timezone
+from pathlib import Path
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -117,3 +119,45 @@ async def delete_task(
     await db.delete(task)
     await db.commit()
     return {"status": "deleted", "id": str(task_id)}
+
+
+PRESETS_DIR = Path("config/maintenance-presets")
+CURRENT_MONTH = date.today().month
+SEASONS_BY_MONTH = {1: "winter", 2: "winter", 3: "spring", 4: "spring", 5: "spring",
+                    6: "summer", 7: "summer", 8: "summer", 9: "fall", 10: "fall",
+                    11: "fall", 12: "winter"}
+
+
+@router.post("/seed-from-preset")
+async def seed_from_preset(
+    property_id: UUID,
+    preset: str = Query("north-texas-clay"),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Generate maintenance tasks from a regional preset for the current season."""
+    preset_path = PRESETS_DIR / f"{preset}.json"
+    if not preset_path.exists():
+        raise HTTPException(status_code=404, detail=f"Preset '{preset}' not found")
+
+    data = json.loads(preset_path.read_text())
+    current_season = SEASONS_BY_MONTH.get(CURRENT_MONTH, "spring")
+    season_data = data.get("seasons", {}).get(current_season, {})
+    tasks_data = season_data.get("tasks", [])
+
+    created = 0
+    for t in tasks_data:
+        task = MaintenanceTask(
+            property_id=property_id,
+            title=t["title"],
+            description=t.get("description"),
+            priority=t.get("priority", "medium"),
+            system=t.get("system"),
+            recurring=True,
+            rrule=t.get("rrule"),
+            due_date=date.today(),
+        )
+        db.add(task)
+        created += 1
+
+    await db.commit()
+    return {"preset": preset, "season": current_season, "tasks_created": created}
