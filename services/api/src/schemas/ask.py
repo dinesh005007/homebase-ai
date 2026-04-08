@@ -1,5 +1,6 @@
 """Pydantic schemas for the /ask endpoint."""
 
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -23,3 +24,22 @@ class AskResponse(BaseModel):
     latency_ms: int
     confidence: str
     intent: str | None = None
+    safety_level: str | None = None
+
+
+class ConversationItem(BaseModel):
+    id: UUID
+    question: str
+    answer: str
+    intent: str | None
+    model_used: str | None
+    latency_ms: int | None
+    confidence: str | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ConversationListResponse(BaseModel):
+    conversations: list[ConversationItem]
+    total: int
