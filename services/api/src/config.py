@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     LOG_LEVEL: str = "INFO"
     CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    HA_URL: str = ""
+    HA_TOKEN: str = ""
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
