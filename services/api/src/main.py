@@ -8,7 +8,7 @@ from sqlalchemy import text
 
 from services.api.src.config import settings
 from services.api.src.database import engine
-from services.api.src.routers import ask, documents, health
+from services.api.src.routers import ask, auth, documents, health
 
 logger = structlog.get_logger()
 
@@ -46,5 +46,6 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(auth.router)
 app.include_router(documents.router)
 app.include_router(ask.router)
