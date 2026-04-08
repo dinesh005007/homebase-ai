@@ -12,6 +12,7 @@ class DocumentUploadResponse(BaseModel):
     doc_type: str
     chunks_created: int
     status: str
+    classification_confidence: float | None = None
 
 
 class DocumentListItem(BaseModel):

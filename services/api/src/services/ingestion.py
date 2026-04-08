@@ -11,8 +11,9 @@ from pypdf import PdfReader
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.api.src.models.document import Document, DocumentChunk
+from services.api.src.services.classification import ClassificationService
 from services.api.src.services.embeddings import EmbeddingService
-from services.api.src.utils.text import chunk_text
+from services.api.src.utils.text import chunk_text, smart_chunk_text
 
 logger = structlog.get_logger()
 
@@ -20,8 +21,13 @@ UPLOAD_DIR = Path("data/documents")
 
 
 class IngestionService:
-    def __init__(self, embedding_service: EmbeddingService | None = None) -> None:
+    def __init__(
+        self,
+        embedding_service: EmbeddingService | None = None,
+        classification_service: ClassificationService | None = None,
+    ) -> None:
         self.embedding_service = embedding_service or EmbeddingService()
+        self.classification_service = classification_service or ClassificationService()
 
     async def ingest_document(
         self,
@@ -53,14 +59,22 @@ class IngestionService:
             if chars_per_page < 100:
                 logger.warning("low_text_extraction", chars_per_page=chars_per_page, filename=filename)
 
+        # Auto-classify if doc_type is "auto" or not provided
+        classification_confidence = None
+        if doc_type == "auto" or not doc_type:
+            result = await self.classification_service.classify(text)
+            doc_type = result["doc_type"]
+            classification_confidence = result["confidence"]
+            logger.info("auto_classified", doc_type=doc_type, confidence=classification_confidence)
+
         # Store file locally
         dest_dir = UPLOAD_DIR / str(property_id)
         dest_dir.mkdir(parents=True, exist_ok=True)
         dest_path = dest_dir / filename
         shutil.copy2(file_path, dest_path)
 
-        # Chunk text
-        chunks = chunk_text(text)
+        # Smart chunking based on document type
+        chunks = smart_chunk_text(text, doc_type)
         logger.info("chunking_complete", chunks=len(chunks), filename=filename)
 
         # Generate embeddings
@@ -78,6 +92,11 @@ class IngestionService:
             page_count=page_count,
             ocr_text_summary=text[:500] if text else None,
             ingested_at=datetime.now(timezone.utc),
+            metadata_={
+                k: v for k, v in {
+                    "classification_confidence": classification_confidence,
+                }.items() if v is not None
+            },
         )
         db.add(doc)
         await db.flush()

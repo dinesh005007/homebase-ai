@@ -26,7 +26,7 @@ router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 async def upload_document(
     file: UploadFile = File(...),
     property_id: UUID = Form(...),
-    doc_type: str = Form(...),
+    doc_type: str = Form("auto"),
     title: str = Form(...),
     db: AsyncSession = Depends(get_db),
 ) -> DocumentUploadResponse:
@@ -58,6 +58,7 @@ async def upload_document(
         doc_type=doc.doc_type,
         chunks_created=chunks_created,
         status="processed",
+        classification_confidence=doc.metadata_.get("classification_confidence") if doc.metadata_ else None,
     )
 
 

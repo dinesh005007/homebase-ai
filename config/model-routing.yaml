@@ -1,0 +1,26 @@
+models:
+  fast:
+    name: gemma3:4b
+    roles: [classifier, extractor, entity-linker]
+    timeout: 30
+  reason:
+    name: qwen2.5:7b
+    roles: [rag, general]
+    timeout: 60
+  vision:
+    name: llava:13b
+    roles: [vision]
+    timeout: 90
+  embed:
+    name: nomic-embed-text
+    roles: [embedding]
+    timeout: 30
+    dimensions: 768
+
+defaults:
+  classifier: fast
+  extractor: fast
+  entity-linker: fast
+  rag: reason
+  vision: vision
+  embedding: embed
