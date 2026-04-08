@@ -3,5 +3,10 @@ from services.api.src.models.property import Property
 from services.api.src.models.document import Document, DocumentChunk
 from services.api.src.models.document_entity_link import DocumentEntityLink
 from services.api.src.models.conversation import Conversation
+from services.api.src.models.maintenance import MaintenanceTask, MaintenanceSchedule
 
-__all__ = ["Base", "Property", "Document", "DocumentChunk", "DocumentEntityLink", "Conversation"]
+__all__ = [
+    "Base", "Property", "Document", "DocumentChunk",
+    "DocumentEntityLink", "Conversation",
+    "MaintenanceTask", "MaintenanceSchedule",
+]
