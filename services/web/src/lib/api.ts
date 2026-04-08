@@ -49,6 +49,21 @@ export interface AskResponse {
   confidence: string;
 }
 
+export interface MaintenanceTask {
+  id: string;
+  property_id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  system: string | null;
+  room: string | null;
+  due_date: string | null;
+  completed_at: string | null;
+  recurring: boolean;
+  created_at: string;
+}
+
 export const api = {
   health: () => request<HealthResponse>("/health"),
 
@@ -98,4 +113,33 @@ export const api = {
       }
     }
   },
+
+  listMaintenanceTasks: (propertyId: string, filters?: { status?: string; priority?: string }) => {
+    const params = new URLSearchParams({ property_id: propertyId });
+    if (filters?.status) params.set("status", filters.status);
+    if (filters?.priority) params.set("priority", filters.priority);
+    return request<{ tasks: MaintenanceTask[]; total: number }>(`/maintenance/tasks?${params}`);
+  },
+
+  createMaintenanceTask: (task: { property_id: string; title: string; description?: string; priority?: string; system?: string; due_date?: string }) =>
+    request<MaintenanceTask>("/maintenance/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(task),
+    }),
+
+  updateMaintenanceTask: (taskId: string, update: { status?: string; title?: string; priority?: string; due_date?: string }) =>
+    request<MaintenanceTask>(`/maintenance/tasks/${taskId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(update),
+    }),
+
+  deleteMaintenanceTask: (taskId: string) =>
+    request<{ status: string }>(`/maintenance/tasks/${taskId}`, { method: "DELETE" }),
+
+  seedMaintenanceTasks: (propertyId: string) =>
+    request<{ preset: string; season: string; tasks_created: number }>(
+      `/maintenance/seed-from-preset?property_id=${propertyId}`
+    , { method: "POST" }),
 };
