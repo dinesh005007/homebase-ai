@@ -48,27 +48,47 @@ export default function AskPage() {
     setInput("");
     setLoading(true);
 
+    const assistantId = crypto.randomUUID();
+    setMessages((prev) => [
+      ...prev,
+      { id: assistantId, role: "assistant", content: "" },
+    ]);
+
     try {
-      const res = await api.ask(userMsg.content, propertyId);
-      const assistantMsg: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: res.answer,
-        sources: res.sources,
-        model: res.model_used,
-        latency: res.latency_ms,
-        confidence: res.confidence,
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
+      let fullContent = "";
+      let metadata: Partial<Message> = {};
+
+      for await (const chunk of api.askStream(userMsg.content, propertyId)) {
+        if (!chunk.done) {
+          fullContent += chunk.token;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId ? { ...m, content: fullContent } : m
+            )
+          );
+        } else {
+          metadata = {
+            sources: chunk.sources,
+            model: chunk.model_used,
+            latency: chunk.latency_ms,
+            confidence: chunk.confidence,
+          };
+        }
+      }
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId ? { ...m, ...metadata } : m
+        )
+      );
     } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: err instanceof Error ? err.message : "Something went wrong.",
-        },
-      ]);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? { ...m, content: err instanceof Error ? err.message : "Something went wrong." }
+            : m
+        )
+      );
     } finally {
       setLoading(false);
     }
