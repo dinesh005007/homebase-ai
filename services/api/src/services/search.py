@@ -35,9 +35,10 @@ class HybridSearchService:
         embedding_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
 
         doc_type_clause = ""
+        params: dict = {"embedding": embedding_str, "property_id": property_id, "limit": top_k * 2}
         if doc_type_filter:
-            placeholders = ", ".join(f"'{t}'" for t in doc_type_filter)
-            doc_type_clause = f"AND d.doc_type IN ({placeholders})"
+            doc_type_clause = "AND d.doc_type = ANY(:doc_types)"
+            params["doc_types"] = doc_type_filter
 
         # Semantic search (pgvector cosine distance)
         semantic_stmt = text(f"""
@@ -54,13 +55,14 @@ class HybridSearchService:
             ORDER BY dc.embedding <=> :embedding::vector
             LIMIT :limit
         """)
-        semantic_result = await db.execute(
-            semantic_stmt,
-            {"embedding": embedding_str, "property_id": property_id, "limit": top_k * 2},
-        )
+        semantic_result = await db.execute(semantic_stmt, params)
         semantic_rows = semantic_result.fetchall()
 
         # Keyword search (tsvector full-text)
+        keyword_params: dict = {"query": question, "property_id": property_id, "limit": top_k * 2}
+        if doc_type_filter:
+            keyword_params["doc_types"] = doc_type_filter
+
         keyword_stmt = text(f"""
             SELECT
                 dc.id as chunk_id,
@@ -77,10 +79,7 @@ class HybridSearchService:
             ORDER BY rank DESC
             LIMIT :limit
         """)
-        keyword_result = await db.execute(
-            keyword_stmt,
-            {"query": question, "property_id": property_id, "limit": top_k * 2},
-        )
+        keyword_result = await db.execute(keyword_stmt, keyword_params)
         keyword_rows = keyword_result.fetchall()
 
         # RRF Fusion
