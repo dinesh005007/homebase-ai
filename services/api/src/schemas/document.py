@@ -31,3 +31,16 @@ class DocumentListItem(BaseModel):
 class DocumentListResponse(BaseModel):
     documents: list[DocumentListItem]
     total: int
+
+
+class BatchUploadItem(BaseModel):
+    filename: str
+    document_id: UUID | None
+    doc_type: str
+    chunks_created: int
+    status: str
+
+
+class BatchUploadResponse(BaseModel):
+    results: list[BatchUploadItem]
+    total: int
