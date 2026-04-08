@@ -1,5 +1,6 @@
 """Document upload and listing endpoints."""
 
+import os
 import tempfile
 from typing import Annotated
 from uuid import UUID
@@ -35,28 +36,35 @@ async def upload_document(
     description: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ) -> DocumentUploadResponse:
-    # Write uploaded file to temp location
+    # Read file with size limit (50MB)
+    content = await file.read()
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 50MB.")
+
+    # Write to temp file
     with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file.filename}") as tmp:
-        content = await file.read()
         tmp.write(content)
         tmp_path = tmp.name
 
-    service = IngestionService()
-    doc = await service.ingest_document(
-        file_path=tmp_path,
-        filename=file.filename or "upload.pdf",
-        property_id=property_id,
-        doc_type=doc_type,
-        title=title,
-        description=description or None,
-        db=db,
-    )
+    try:
+        service = IngestionService()
+        doc = await service.ingest_document(
+            file_path=tmp_path,
+            filename=file.filename or "upload.pdf",
+            property_id=property_id,
+            doc_type=doc_type,
+            title=title,
+            description=description or None,
+            db=db,
+        )
 
-    # Count chunks
-    result = await db.execute(
-        select(func.count()).where(DocumentChunk.document_id == doc.id)
-    )
-    chunks_created = result.scalar_one()
+        # Count chunks
+        result = await db.execute(
+            select(func.count()).where(DocumentChunk.document_id == doc.id)
+        )
+        chunks_created = result.scalar_one()
+    finally:
+        os.unlink(tmp_path)
 
     return DocumentUploadResponse(
         document_id=doc.id,
@@ -90,13 +98,23 @@ async def batch_upload(
     property_id: UUID = Form(...),
     db: AsyncSession = Depends(get_db),
 ) -> BatchUploadResponse:
-    """Upload multiple documents at once. Auto-classifies each."""
+    """Upload multiple documents at once. Auto-classifies each. Max 10 files."""
+    if len(files) > 10:
+        raise HTTPException(status_code=400, detail="Maximum 10 files per batch upload")
+
     service = IngestionService()
     results: list[BatchUploadItem] = []
 
     for file in files:
+        content = await file.read()
+        if len(content) > 50 * 1024 * 1024:
+            results.append(BatchUploadItem(
+                filename=file.filename or "upload.pdf", document_id=None,
+                doc_type="unknown", chunks_created=0, status="error: file too large (50MB max)",
+            ))
+            continue
+
         with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file.filename}") as tmp:
-            content = await file.read()
             tmp.write(content)
             tmp_path = tmp.name
 
@@ -129,6 +147,8 @@ async def batch_upload(
                 chunks_created=0,
                 status=f"error: {str(e)[:100]}",
             ))
+        finally:
+            os.unlink(tmp_path)
 
     return BatchUploadResponse(results=results, total=len(results))
 
