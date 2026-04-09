@@ -48,11 +48,11 @@ class HybridSearchService:
                 dc.content,
                 dc.page_number,
                 dc.section_header,
-                1 - (dc.embedding <=> :embedding::vector) as similarity
+                1 - (dc.embedding <=> CAST(:embedding AS vector)) as similarity
             FROM document_chunks dc
             JOIN documents d ON dc.document_id = d.id
             WHERE d.property_id = :property_id {doc_type_clause}
-            ORDER BY dc.embedding <=> :embedding::vector
+            ORDER BY dc.embedding <=> CAST(:embedding AS vector)
             LIMIT :limit
         """)
         semantic_result = await db.execute(semantic_stmt, params)
