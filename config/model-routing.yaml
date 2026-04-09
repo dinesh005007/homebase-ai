@@ -1,12 +1,16 @@
 models:
   fast:
-    name: gemma3:4b
+    name: qwen2.5:1.5b
     roles: [classifier, extractor, entity-linker]
     timeout: 30
   reason:
-    name: qwen2.5:7b
+    name: qwen2.5:1.5b
     roles: [rag, general]
-    timeout: 60
+    timeout: 120
+  reason-large:
+    name: qwen2.5:7b
+    roles: []
+    timeout: 300
   vision:
     name: llava:13b
     roles: [vision]
@@ -17,10 +21,12 @@ models:
     timeout: 30
     dimensions: 768
 
+# For 8GB RAM / CPU-only machines, use qwen2.5:1.5b for everything.
+# Switch reason to qwen2.5:7b when you have more RAM or GPU.
 defaults:
-  classifier: reason
-  extractor: reason
-  entity-linker: reason
+  classifier: fast
+  extractor: fast
+  entity-linker: fast
   rag: reason
   vision: vision
   embedding: embed
