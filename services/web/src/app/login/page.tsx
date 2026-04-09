@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { LogIn, Loader2, AlertCircle } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { getApiBase } from "@/lib/api";
+const API_URL = getApiBase();
 
 export default function LoginPage() {
   const router = useRouter();

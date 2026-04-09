@@ -18,7 +18,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { getApiBase } from "@/lib/api";
+const API_URL = getApiBase();
 
 const fadeIn = {
   initial: { opacity: 0, y: 12 },

@@ -16,6 +16,7 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getApiBase } from "@/lib/api";
 
 const fadeIn = {
   initial: { opacity: 0, y: 12 },
@@ -35,7 +36,7 @@ export default function SmartHomePage() {
 
   useEffect(() => {
     // Check HA status
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"}/smarthome/status`)
+    fetch(`${getApiBase()}/smarthome/status`)
       .then((r) => r.json())
       .then((data) => setHaConnected(data.ha_connected))
       .catch(() => setHaConnected(false))

@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     OLLAMA_HOST: str = "http://localhost:11434"
     REDIS_URL: str = "redis://localhost:6379/0"
     LOG_LEVEL: str = "INFO"
-    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000,http://192.168.1.108:3000"
     HA_URL: str = ""
     HA_TOKEN: str = ""
 
