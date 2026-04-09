@@ -88,6 +88,17 @@ class RAGService:
             top_k=TOP_K,
         )
 
+        # Fallback: if filtered search returns nothing, retry without filter
+        if not search_results and doc_type_filter:
+            logger.info("rag_filter_fallback", intent=intent, filter=doc_type_filter)
+            search_results = await self.search_service.search(
+                question=question,
+                property_id=property_id,
+                db=db,
+                doc_type_filter=None,
+                top_k=TOP_K,
+            )
+
         if not search_results:
             latency_ms = int((time.monotonic() - start) * 1000)
             return {
