@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
@@ -35,11 +35,11 @@ const DOC_TYPE_COLORS: Record<string, string> = {
 };
 
 export default function DocumentsPage() {
-  const [propertyId] = useState(() =>
-    typeof window !== "undefined"
-      ? localStorage.getItem("homebase_property_id") || ""
-      : ""
-  );
+  const [propertyId, setPropertyId] = useState("");
+
+  useEffect(() => {
+    setPropertyId(localStorage.getItem("homebase_property_id") || "");
+  }, []);
   const [documents, setDocuments] = useState<DocumentListItem[]>([]);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
