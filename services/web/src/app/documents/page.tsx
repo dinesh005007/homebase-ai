@@ -187,8 +187,14 @@ export default function DocumentsPage() {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
-                  if (!propertyId) { setUploadResult("Error: Set Property ID in Settings first"); return; }
-                  if (!title) { setUploadResult("Error: Enter a document title first"); return; }
+                  if (!propertyId) {
+                    alert("Set your Property ID in Settings first!\n\nGo to Settings → paste your property UUID → click Save.");
+                    return;
+                  }
+                  if (!title) {
+                    alert("Enter a document title before uploading.");
+                    return;
+                  }
                   handleUpload(file);
                   e.target.value = "";
                 }}
