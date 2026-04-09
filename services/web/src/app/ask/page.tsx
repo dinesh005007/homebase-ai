@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot, User, FileText, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, generateId } from "@/lib/utils";
 import { api, type AskResponse } from "@/lib/api";
 
 interface Message {
@@ -40,7 +40,7 @@ export default function AskPage() {
     if (!input.trim() || !propertyId || loading) return;
 
     const userMsg: Message = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       role: "user",
       content: input.trim(),
     };
@@ -48,7 +48,7 @@ export default function AskPage() {
     setInput("");
     setLoading(true);
 
-    const assistantId = crypto.randomUUID();
+    const assistantId = generateId();
     setMessages((prev) => [
       ...prev,
       { id: assistantId, role: "assistant", content: "" },
