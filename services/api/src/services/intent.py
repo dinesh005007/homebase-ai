@@ -82,8 +82,8 @@ class IntentService:
                 "doc_type_filter": doc_filter,
             }
 
-        except (json.JSONDecodeError, ValueError) as e:
-            logger.error("intent_classification_error", error=str(e))
+        except Exception as e:
+            logger.error("intent_classification_error", error=str(e), error_type=type(e).__name__)
             return {
                 "intent": "general_home",
                 "confidence": 0.0,

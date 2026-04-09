@@ -59,42 +59,50 @@ class EntityLinkingService:
             text=sample,
         )
 
+        # Call Ollama — catch all errors from the LLM / network layer
         try:
             raw = await self.client.generate(
                 prompt=prompt,
                 model=self._model,
             )
-
-            links = json.loads(raw.strip())
-            if not isinstance(links, list):
-                return []
-
-            created: list[dict] = []
-            for link in links:
-                entity_type = link.get("entity_type", "")
-                if entity_type not in ENTITY_TYPES:
-                    continue
-
-                db_link = DocumentEntityLink(
-                    document_id=document_id,
-                    entity_type=entity_type,
-                    entity_name=link.get("entity_name", "unknown"),
-                    link_type=link.get("link_type", "about"),
-                    confidence=max(0.0, min(1.0, float(link.get("confidence", 0.5)))),
-                )
-                db.add(db_link)
-                created.append({
-                    "entity_type": db_link.entity_type,
-                    "entity_name": db_link.entity_name,
-                    "link_type": db_link.link_type,
-                })
-
-            if created:
-                await db.flush()
-                logger.info("entity_links_created", document_id=document_id, count=len(created))
-
-            return created
-
-        except (json.JSONDecodeError, ValueError) as e:
-            logger.error("entity_linking_error", error=str(e))
+        except Exception as e:
+            logger.warning("entity_linking_llm_error", error=str(e), error_type=type(e).__name__)
             return []
+
+        # Parse response — catch JSON / value errors
+        try:
+            links = json.loads(raw.strip())
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.warning("entity_linking_parse_error", error=str(e))
+            return []
+
+        if not isinstance(links, list):
+            return []
+
+        created: list[dict] = []
+        for link in links:
+            entity_type = link.get("entity_type", "")
+            if entity_type not in ENTITY_TYPES:
+                continue
+
+            db_link = DocumentEntityLink(
+                document_id=document_id,
+                entity_type=entity_type,
+                entity_name=link.get("entity_name", "unknown"),
+                link_type=link.get("link_type", "about"),
+                confidence=max(0.0, min(1.0, float(link.get("confidence", 0.5)))),
+            )
+            db.add(db_link)
+            created.append({
+                "entity_type": db_link.entity_type,
+                "entity_name": db_link.entity_name,
+                "link_type": db_link.link_type,
+            })
+
+        # flush() may raise DB errors — let them propagate to the caller's
+        # savepoint so the session stays clean.
+        if created:
+            await db.flush()
+            logger.info("entity_links_created", document_id=document_id, count=len(created))
+
+        return created

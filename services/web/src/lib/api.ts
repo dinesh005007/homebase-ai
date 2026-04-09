@@ -114,7 +114,7 @@ export const api = {
       for (const line of lines) {
         if (line.startsWith("data: ")) {
           const data = JSON.parse(line.slice(6));
-          yield data as { token: string; done: boolean; sources?: AskSource[]; model_used?: string; latency_ms?: number; confidence?: string; intent?: string; safety_level?: string };
+          yield data as { token: string; done: boolean; error?: string; sources?: AskSource[]; model_used?: string; latency_ms?: number; confidence?: string; intent?: string; safety_level?: string };
         }
       }
     }

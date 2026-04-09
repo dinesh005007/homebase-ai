@@ -136,16 +136,23 @@ class IngestionService:
             )
             db.add(db_chunk)
 
-        # Entity linking
+        # Flush chunks so they are written to the DB before the entity
+        # linking savepoint.  A savepoint rollback will then only undo
+        # entity-link rows, not the document or its chunks.
+        await db.flush()
+
+        # Entity linking — wrapped in a savepoint so failures don't
+        # invalidate the session and lose the document + chunks.
         entity_links = []
         try:
-            entity_links = await self.entity_linking_service.link(
-                text=text,
-                doc_type=doc_type,
-                title=title,
-                document_id=str(doc.id),
-                db=db,
-            )
+            async with db.begin_nested():
+                entity_links = await self.entity_linking_service.link(
+                    text=text,
+                    doc_type=doc_type,
+                    title=title,
+                    document_id=str(doc.id),
+                    db=db,
+                )
         except Exception as e:
             logger.warning("entity_linking_skipped", error=str(e))
 

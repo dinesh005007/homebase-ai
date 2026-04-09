@@ -18,9 +18,9 @@ models:
     dimensions: 768
 
 defaults:
-  classifier: fast
-  extractor: fast
-  entity-linker: fast
+  classifier: reason
+  extractor: reason
+  entity-linker: reason
   rag: reason
   vision: vision
   embedding: embed

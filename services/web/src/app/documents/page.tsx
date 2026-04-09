@@ -62,6 +62,10 @@ export default function DocumentsPage() {
     }
   }, [propertyId]);
 
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
+
   const handleUpload = async (file: File) => {
     if (!propertyId || !title) return;
     setUploading(true);

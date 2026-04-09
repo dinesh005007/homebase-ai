@@ -66,6 +66,14 @@ export default function AskPage() {
               m.id === assistantId ? { ...m, content: fullContent } : m
             )
           );
+        } else if (chunk.error) {
+          // Server sent an error event through SSE
+          fullContent = `Error: ${chunk.error}`;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId ? { ...m, content: fullContent } : m
+            )
+          );
         } else {
           metadata = {
             sources: chunk.sources,
