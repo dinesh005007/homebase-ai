@@ -168,7 +168,16 @@ export default function DocumentsPage() {
               rows={2}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none"
             />
-            <label className="flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-3 text-sm text-muted-foreground hover:border-primary/30 transition-colors duration-150 cursor-pointer">
+            {!propertyId && (
+              <p className="text-xs text-destructive">Set your Property ID in Settings first.</p>
+            )}
+            {propertyId && !title && (
+              <p className="text-xs text-amber-500">Enter a document title before uploading.</p>
+            )}
+            <label className={cn(
+              "flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-3 text-sm transition-colors duration-150 cursor-pointer",
+              uploading ? "opacity-50 cursor-not-allowed" : "text-muted-foreground hover:border-primary/30"
+            )}>
               <Upload className="h-4 w-4" />
               <span>Choose PDF or drag & drop</span>
               <input
@@ -177,9 +186,13 @@ export default function DocumentsPage() {
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) handleUpload(file);
+                  if (!file) return;
+                  if (!propertyId) { setUploadResult("Error: Set Property ID in Settings first"); return; }
+                  if (!title) { setUploadResult("Error: Enter a document title first"); return; }
+                  handleUpload(file);
+                  e.target.value = "";
                 }}
-                disabled={uploading || !propertyId || !title}
+                disabled={uploading}
               />
             </label>
           </div>
