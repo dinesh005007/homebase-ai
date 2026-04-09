@@ -65,16 +65,19 @@ class IngestionService:
                 logger.warning("low_text_extraction", chars_per_page=chars_per_page, filename=filename)
 
         # Auto-classify if doc_type is "auto" or not provided
-        # Use user description as hint for better classification
         classification_confidence = None
         if doc_type == "auto" or not doc_type:
-            classify_input = text
-            if description:
-                classify_input = f"User says this document is: {description}\n\n{text}"
-            result = await self.classification_service.classify(classify_input)
-            doc_type = result["doc_type"]
-            classification_confidence = result["confidence"]
-            logger.info("auto_classified", doc_type=doc_type, confidence=classification_confidence)
+            try:
+                classify_input = text
+                if description:
+                    classify_input = f"User says this document is: {description}\n\n{text}"
+                result = await self.classification_service.classify(classify_input)
+                doc_type = result["doc_type"]
+                classification_confidence = result["confidence"]
+                logger.info("auto_classified", doc_type=doc_type, confidence=classification_confidence)
+            except Exception as e:
+                logger.warning("classification_skipped", error=str(e))
+                doc_type = "other"
 
         # Store file locally
         dest_dir = UPLOAD_DIR / str(property_id)
@@ -91,7 +94,11 @@ class IngestionService:
         embeddings = await self.embedding_service.embed_chunks(chunk_texts) if chunk_texts else []
 
         # Extract structured fields based on document type
-        extracted_fields = await self.extraction_service.extract(text, doc_type)
+        extracted_fields = None
+        try:
+            extracted_fields = await self.extraction_service.extract(text, doc_type)
+        except Exception as e:
+            logger.warning("extraction_skipped", error=str(e))
 
         # Build metadata
         doc_metadata: dict = {}
@@ -130,13 +137,17 @@ class IngestionService:
             db.add(db_chunk)
 
         # Entity linking
-        entity_links = await self.entity_linking_service.link(
-            text=text,
-            doc_type=doc_type,
-            title=title,
-            document_id=str(doc.id),
-            db=db,
-        )
+        entity_links = []
+        try:
+            entity_links = await self.entity_linking_service.link(
+                text=text,
+                doc_type=doc_type,
+                title=title,
+                document_id=str(doc.id),
+                db=db,
+            )
+        except Exception as e:
+            logger.warning("entity_linking_skipped", error=str(e))
 
         await db.commit()
         await db.refresh(doc)
