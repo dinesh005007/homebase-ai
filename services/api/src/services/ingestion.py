@@ -15,6 +15,7 @@ from services.api.src.services.classification import ClassificationService
 from services.api.src.services.embeddings import EmbeddingService
 from services.api.src.services.entity_linking import EntityLinkingService
 from services.api.src.services.extraction import ExtractionService
+from services.api.src.utils.ocr import is_scanned_pdf, ocr_pdf
 from services.api.src.utils.text import chunk_text, smart_chunk_text
 
 logger = structlog.get_logger()
@@ -60,9 +61,15 @@ class IngestionService:
                 page_text = page.extract_text() or ""
                 text += page_text + "\n\n"
 
-            chars_per_page = len(text) / max(page_count, 1)
-            if chars_per_page < 100:
-                logger.warning("low_text_extraction", chars_per_page=chars_per_page, filename=filename)
+            # If pypdf extracted very little text, it's likely a scanned PDF — use OCR
+            if is_scanned_pdf(text, page_count):
+                logger.info("scanned_pdf_detected", chars_per_page=len(text) / max(page_count, 1), filename=filename)
+                ocr_text = ocr_pdf(file_path)
+                if ocr_text:
+                    text = ocr_text
+                    logger.info("ocr_text_extracted", chars=len(text), filename=filename)
+                else:
+                    logger.warning("ocr_failed_fallback", filename=filename)
 
         # Auto-classify if doc_type is "auto" or not provided
         classification_confidence = None
