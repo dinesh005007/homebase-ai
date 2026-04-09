@@ -37,10 +37,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+cors_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",")]
+# In dev, allow wildcard so any LAN IP works
+if "*" in cors_origins:
+    cors_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in settings.CORS_ORIGINS.split(",")],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=True if "*" not in cors_origins else False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
