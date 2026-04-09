@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot, User, FileText, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { cn, generateId } from "@/lib/utils";
 import { api, type AskResponse } from "@/lib/api";
+import { usePropertyId } from "@/hooks/use-property-id";
 
 interface Message {
   id: string;
@@ -20,20 +21,12 @@ export default function AskPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [propertyId, setPropertyId] = useState("");
+  const { propertyId } = usePropertyId();
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setPropertyId(localStorage.getItem("homebase_property_id") || "");
-  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
-
-  useEffect(() => {
-    if (propertyId) localStorage.setItem("homebase_property_id", propertyId);
-  }, [propertyId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,13 +105,9 @@ export default function AskPage() {
             Ask questions about your home documents
           </p>
         </div>
-        <input
-          type="text"
-          value={propertyId}
-          onChange={(e) => setPropertyId(e.target.value)}
-          placeholder="Property UUID"
-          className="w-64 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-ring"
-        />
+        {!propertyId && (
+          <span className="text-xs text-amber-500">Loading property...</span>
+        )}
       </div>
 
       {/* Messages */}

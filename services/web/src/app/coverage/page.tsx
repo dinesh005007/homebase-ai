@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePropertyId } from "@/hooks/use-property-id";
 import { motion } from "framer-motion";
 import {
   Shield,
@@ -35,11 +36,7 @@ interface ClaimCheckResult {
 }
 
 export default function CoveragePage() {
-  const [propertyId] = useState(() =>
-    typeof window !== "undefined"
-      ? localStorage.getItem("homebase_property_id") || ""
-      : ""
-  );
+  const { propertyId } = usePropertyId();
 
   // Claim check state
   const [issueDescription, setIssueDescription] = useState("");

@@ -8,6 +8,17 @@ function getBase(): string {
   return getApiBase();
 }
 
+export interface PropertyItem {
+  id: string;
+  name: string;
+  address_line1: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  builder: string | null;
+  purchase_date: string | null;
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${getBase()}${path}`, options);
   if (!res.ok) {
@@ -74,6 +85,8 @@ export interface MaintenanceTask {
 
 export const api = {
   health: () => request<HealthResponse>("/health"),
+
+  listProperties: () => request<PropertyItem[]>("/properties"),
 
   uploadDocument: (formData: FormData) =>
     request<DocumentUploadResponse>("/documents/upload", {

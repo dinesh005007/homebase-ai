@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { usePropertyId } from "@/hooks/use-property-id";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wrench,
@@ -31,10 +32,7 @@ const fadeIn = {
 };
 
 export default function MaintenancePage() {
-  const [propertyId] = useState(() =>
-    typeof window !== "undefined"
-      ? localStorage.getItem("homebase_property_id") || ""
-      : ""
+  const { propertyId } = usePropertyId(
   );
   const [tasks, setTasks] = useState<MaintenanceTask[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
