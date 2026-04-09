@@ -148,12 +148,26 @@ class RAGService:
         prompt = f"Home Profile:\n{home_context}\n\nDocument Context:\n{context}\n\nQuestion: {question}"
 
         # Generate answer
-        model = "qwen2.5:7b"
-        answer = await self.ollama_client.generate(
-            prompt=prompt,
-            model=model,
-            system=SYSTEM_PROMPT,
-        )
+        from services.api.src.services.router import get_model_router
+        model = get_model_router().get_model_name("rag")
+        try:
+            answer = await self.ollama_client.generate(
+                prompt=prompt,
+                model=model,
+                system=SYSTEM_PROMPT,
+            )
+        except Exception as e:
+            logger.error("rag_generation_error", error=str(e))
+            latency_ms = int((time.monotonic() - start) * 1000)
+            return {
+                "answer": f"I couldn't generate an answer right now. Error: {type(e).__name__}. Please check that Ollama is running with the {model} model.",
+                "sources": sources,
+                "model_used": model,
+                "latency_ms": latency_ms,
+                "confidence": "none",
+                "intent": intent,
+                "safety_level": "safe",
+            }
 
         # Prepend low-confidence disclaimer
         if confidence == "low":

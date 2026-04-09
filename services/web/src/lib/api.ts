@@ -4,10 +4,12 @@ export function getApiBase(): string {
   return "http://localhost:8000/api/v1";
 }
 
-const API_BASE = getApiBase();
+function getBase(): string {
+  return getApiBase();
+}
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, options);
+  const res = await fetch(`${getBase()}${path}`, options);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.detail || `Request failed: ${res.status}`);
@@ -92,7 +94,7 @@ export const api = {
     }),
 
   askStream: async function* (question: string, propertyId: string) {
-    const res = await fetch(`${API_BASE}/ask/stream`, {
+    const res = await fetch(`${getBase()}/ask/stream`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, property_id: propertyId }),

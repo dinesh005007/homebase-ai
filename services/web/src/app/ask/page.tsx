@@ -16,16 +16,16 @@ interface Message {
   confidence?: string;
 }
 
-const PROPERTY_ID = typeof window !== "undefined"
-  ? localStorage.getItem("homebase_property_id") || ""
-  : "";
-
 export default function AskPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [propertyId, setPropertyId] = useState(PROPERTY_ID);
+  const [propertyId, setPropertyId] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setPropertyId(localStorage.getItem("homebase_property_id") || "");
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
