@@ -4,7 +4,7 @@ import json
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +13,7 @@ from services.api.src.database import get_db
 from services.api.src.models.conversation import Conversation
 from services.api.src.schemas.ask import AskRequest, AskResponse, ConversationItem, ConversationListResponse
 from services.api.src.services.rag import RAGService
+from services.api.src.utils.rate_limit import sse_limiter
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/api/v1", tags=["ask"])
@@ -60,9 +61,16 @@ async def ask_question(
 @router.post("/ask/stream")
 async def ask_stream(
     request: AskRequest,
+    raw_request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> StreamingResponse:
     """SSE streaming endpoint for real-time token delivery."""
+    client_ip = raw_request.client.host if raw_request.client else "unknown"
+    if not sse_limiter.is_allowed(client_ip):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many requests. Please wait a moment before asking again.",
+        )
 
     async def event_generator():
         try:
