@@ -42,7 +42,9 @@ export default function DocumentsPage() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string>("Uploading...");
   const [uploadResult, setUploadResult] = useState<string | null>(null);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   // Upload state
   const [title, setTitle] = useState("");
@@ -68,6 +70,7 @@ export default function DocumentsPage() {
     if (!propertyId || !title) return;
     setUploading(true);
     setUploadResult(null);
+    setUploadStatus("Uploading file...");
 
     const formData = new FormData();
     formData.append("file", file);
@@ -76,14 +79,27 @@ export default function DocumentsPage() {
     formData.append("title", title);
     if (description) formData.append("description", description);
 
+    // Simulate progress steps while waiting for the server
+    const steps = [
+      { msg: "Extracting text from PDF...", delay: 2000 },
+      { msg: "Running OCR on scanned pages...", delay: 5000 },
+      { msg: "Chunking and embedding text...", delay: 8000 },
+      { msg: "Almost done — indexing chunks...", delay: 15000 },
+    ];
+    const timers = steps.map(({ msg, delay }) =>
+      setTimeout(() => setUploadStatus(msg), delay)
+    );
+
     try {
       const res = await api.uploadDocument(formData);
+      timers.forEach(clearTimeout);
       const typeLabel = docType === "auto" ? ` (classified as ${res.doc_type})` : "";
-      setUploadResult(`${res.chunks_created} chunks indexed${typeLabel}`);
+      setUploadResult(`Done — ${res.chunks_created} chunks indexed${typeLabel}`);
       setTitle("");
       setDescription("");
       loadDocuments();
     } catch (err) {
+      timers.forEach(clearTimeout);
       setUploadResult(
         `Error: ${err instanceof Error ? err.message : "Upload failed"}`
       );
@@ -101,13 +117,20 @@ export default function DocumentsPage() {
     }
   };
 
-  const handleDelete = async (docId: string, title: string) => {
-    if (!confirm(`Delete "${title}"? This will remove the document and all its embeddings.`)) return;
+  const handleDelete = async (docId: string, docTitle: string) => {
+    if (!confirm(`Delete "${docTitle}"?\n\nThis will remove the document, all embeddings, and entity links.`)) return;
+    setDeletingIds((prev) => new Set(prev).add(docId));
     try {
       await api.deleteDocument(docId);
       setDocuments((prev) => prev.filter((d) => d.id !== docId));
     } catch (err) {
       alert(`Failed to delete: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(docId);
+        return next;
+      });
     }
   };
 
@@ -221,18 +244,34 @@ export default function DocumentsPage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-3 flex items-center gap-2 text-sm"
+              className="mt-4 space-y-2"
             >
               {uploading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                  <span className="text-muted-foreground">Processing...</span>
-                </>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-muted-foreground">{uploadStatus}</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                    <motion.div
+                      className="h-full bg-primary rounded-full"
+                      initial={{ width: "5%" }}
+                      animate={{ width: "90%" }}
+                      transition={{ duration: 30, ease: "linear" }}
+                    />
+                  </div>
+                </div>
               ) : (
-                <>
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  <span className="text-foreground">{uploadResult}</span>
-                </>
+                <div className="flex items-center gap-2 text-sm">
+                  {uploadResult?.startsWith("Error") ? (
+                    <span className="text-destructive">{uploadResult}</span>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      <span className="text-foreground">{uploadResult}</span>
+                    </>
+                  )}
+                </div>
               )}
             </motion.div>
           )}
@@ -279,8 +318,19 @@ export default function DocumentsPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2, delay: i * 0.03 }}
-              className="group rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer"
+              className={cn(
+                "group relative rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:shadow-md hover:border-primary/20",
+                deletingIds.has(doc.id) && "opacity-50 pointer-events-none"
+              )}
             >
+              {deletingIds.has(doc.id) && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-background/60 z-10">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Deleting...</span>
+                  </div>
+                </div>
+              )}
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
                   <File className="h-5 w-5 text-muted-foreground" />
