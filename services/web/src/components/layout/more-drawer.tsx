@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Drawer } from "vaul";
@@ -30,6 +31,8 @@ export function MoreDrawer({
 }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <Drawer.Root open={open} onOpenChange={onOpenChange}>
@@ -66,20 +69,22 @@ export function MoreDrawer({
             })}
 
             {/* Theme toggle */}
-            <button
-              onClick={() => {
-                setTheme(theme === "dark" ? "light" : "dark");
-                onOpenChange(false);
-              }}
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium text-foreground hover:bg-accent transition-colors duration-150 min-h-[44px] cursor-pointer"
-            >
-              {theme === "dark" ? (
-                <Sun className="h-5 w-5 shrink-0" />
-              ) : (
-                <Moon className="h-5 w-5 shrink-0" />
-              )}
-              <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-            </button>
+            {mounted && (
+              <button
+                onClick={() => {
+                  setTheme(theme === "dark" ? "light" : "dark");
+                  onOpenChange(false);
+                }}
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium text-foreground hover:bg-accent transition-colors duration-150 min-h-[44px] cursor-pointer"
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-5 w-5 shrink-0" />
+                ) : (
+                  <Moon className="h-5 w-5 shrink-0" />
+                )}
+                <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+              </button>
+            )}
           </nav>
 
           {/* Version */}
