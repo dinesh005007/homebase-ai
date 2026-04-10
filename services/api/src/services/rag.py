@@ -17,21 +17,13 @@ from services.api.src.services.search import HybridSearchService
 
 logger = structlog.get_logger()
 
-SYSTEM_PROMPT = """You are HomeBase AI, a knowledgeable home assistant.
+SYSTEM_PROMPT = """You are HomeBase AI. Answer ONLY from the provided document context.
+Cite sources as [Source: title, page X]. If the context doesn't answer the question, say so.
+Never guess or use outside knowledge."""
 
-STRICT RULES — you must follow all of these:
-1. Answer ONLY using the provided context. Do NOT use outside knowledge.
-2. If the context does not contain enough information to answer, say:
-   "I don't have enough information in your documents to answer this."
-   Do NOT guess or speculate.
-3. Always cite your sources with [Source: document_title, page X].
-4. If you are unsure, say you are unsure. Never fabricate details.
-5. Do not answer questions unrelated to the user's home, property, or documents.
-6. Keep answers concise and factual."""
-
-TOP_K = 5
-MIN_SIMILARITY = 0.3
-LOW_CONFIDENCE_THRESHOLD = 0.5
+TOP_K = 7
+MIN_SIMILARITY = 0.35
+LOW_CONFIDENCE_THRESHOLD = 0.45
 
 
 class RAGService:
@@ -153,10 +145,16 @@ class RAGService:
 
         context = "\n\n---\n\n".join(context_parts)
 
-        # Assemble home graph context
-        home_context = await self.context_service.build_context(property_id, db)
+        # Assemble home graph context (skip for document-heavy intents to save tokens)
+        home_context = ""
+        if intent not in ("hoa_question", "insurance_question", "warranty_question"):
+            home_context = await self.context_service.build_context(property_id, db)
 
-        prompt = f"Home Profile:\n{home_context}\n\nDocument Context:\n{context}\n\nQuestion: {question}"
+        # Question-first prompt: more salient for small models
+        if home_context:
+            prompt = f"Question: {question}\n\nHome Profile:\n{home_context}\n\nDocument Context:\n{context}"
+        else:
+            prompt = f"Question: {question}\n\nDocument Context:\n{context}"
 
         # Generate answer
         from services.api.src.services.router import get_model_router

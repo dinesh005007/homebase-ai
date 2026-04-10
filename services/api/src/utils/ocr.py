@@ -1,6 +1,7 @@
 """OCR for scanned PDFs using Tesseract + pdf2image."""
 
 import os
+import re
 import time
 
 import structlog
@@ -73,12 +74,34 @@ def ocr_pdf(file_path: str) -> str:
                 logger.info("ocr_progress", page=page_num, total=len(images), elapsed=round(time.monotonic() - start, 1))
 
         full_text = "\n\n".join(text_parts)
+
+        # Clean OCR artifacts before downstream processing
+        full_text = _clean_ocr_text(full_text)
+
         logger.info("ocr_complete", pages_processed=len(text_parts), total_pages=total_pages, chars=len(full_text), elapsed=round(time.monotonic() - start, 1))
         return full_text
 
     except Exception as e:
         logger.error("ocr_failed", error=str(e), elapsed=round(time.monotonic() - start, 1))
         return ""
+
+
+def _clean_ocr_text(text: str) -> str:
+    """Clean common OCR artifacts to improve embedding and search quality."""
+    # Strip [Page N] markers — useful for logging but noise for embeddings
+    text = re.sub(r"\[Page \d+\]\n?", "", text)
+    # Fix common ligature failures
+    text = text.replace("ﬁ", "fi").replace("ﬂ", "fl").replace("ﬀ", "ff")
+    # Normalize quotes and dashes
+    text = text.replace("\u2018", "'").replace("\u2019", "'")
+    text = text.replace("\u201c", '"').replace("\u201d", '"')
+    text = text.replace("\u2013", "-").replace("\u2014", "-")
+    # Collapse excessive whitespace (but keep paragraph breaks)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    # Remove isolated single characters that are OCR garbage (not "I" or "a")
+    text = re.sub(r"\b[^IaA\w]\b", "", text)
+    return text.strip()
 
 
 def is_scanned_pdf(text: str, page_count: int) -> bool:

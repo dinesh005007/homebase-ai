@@ -10,8 +10,8 @@ from services.api.src.services.embeddings import EmbeddingService
 
 logger = structlog.get_logger()
 
-RRF_K = 60  # Reciprocal Rank Fusion constant
-TOP_K = 5
+RRF_K = 40  # Reciprocal Rank Fusion constant (lower = more weight to top results)
+TOP_K = 7
 
 
 class HybridSearchService:
@@ -70,11 +70,11 @@ class HybridSearchService:
                 dc.content,
                 dc.page_number,
                 dc.section_header,
-                ts_rank(dc.search_vector, plainto_tsquery('english', :query)) as rank
+                ts_rank(dc.search_vector, websearch_to_tsquery('english', :query)) as rank
             FROM document_chunks dc
             JOIN documents d ON dc.document_id = d.id
             WHERE d.property_id = :property_id
-              AND dc.search_vector @@ plainto_tsquery('english', :query)
+              AND dc.search_vector @@ websearch_to_tsquery('english', :query)
               {doc_type_clause}
             ORDER BY rank DESC
             LIMIT :limit

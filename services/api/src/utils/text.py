@@ -48,8 +48,8 @@ def _split_text(text: str, separators: list[str], chunk_size: int, overlap: int)
 
 def chunk_text(
     text: str,
-    chunk_size: int = 800,
-    overlap: int = 200,
+    chunk_size: int = 400,
+    overlap: int = 100,
 ) -> list[dict]:
     """Split text into overlapping chunks using recursive character splitting.
 
@@ -83,6 +83,8 @@ _SECTION_PATTERNS: dict[str, list[str]] = {
         "architectural", "restrictions", "fees", "assessment",
         "enforcement", "meetings", "voting", "amendments",
         "maintenance", "common area", "parking", "landscaping",
+        "rental", "lease", "occupancy", "tenant", "commercial",
+        "pet", "animal", "nuisance", "insurance", "indemnif",
     ],
     "manual": [
         "installation", "operation", "troubleshooting", "maintenance",
@@ -104,8 +106,8 @@ def _detect_section(text: str, doc_type: str) -> str | None:
 def smart_chunk_text(
     text: str,
     doc_type: str,
-    chunk_size: int = 800,
-    overlap: int = 200,
+    chunk_size: int = 400,
+    overlap: int = 100,
 ) -> list[dict]:
     """Document-type-aware chunking with section detection.
 
