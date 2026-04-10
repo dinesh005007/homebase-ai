@@ -12,8 +12,8 @@ router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 # Dev accounts (replace with Supabase Auth in production)
 DEV_ACCOUNTS = {
-    "admin@homebase.local": {"password": "admin123", "name": "Admin"},
-    "family@homebase.local": {"password": "family123", "name": "Family Member"},
+    "admin@homebase.local": {"password": os.environ.get("DEV_ADMIN_PASSWORD", "admin123"), "name": "Admin"},
+    "family@homebase.local": {"password": os.environ.get("DEV_FAMILY_PASSWORD", "family123"), "name": "Family Member"},
 }
 
 

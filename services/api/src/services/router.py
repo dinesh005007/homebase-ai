@@ -4,6 +4,7 @@ Resolves which Ollama model + timeout to use for a given task role.
 Hot-reloadable: re-reads config on each call (cached for 60s).
 """
 
+import threading
 import time
 from pathlib import Path
 
@@ -15,6 +16,7 @@ logger = structlog.get_logger()
 CONFIG_PATH = Path("config/model-routing.yaml")
 _cache: dict | None = None
 _cache_time: float = 0
+_lock = threading.Lock()
 CACHE_TTL = 60.0  # seconds
 
 
@@ -30,18 +32,19 @@ class ModelRouter:
 
     def _load_config(self) -> dict:
         global _cache, _cache_time
-        now = time.monotonic()
-        if _cache is not None and (now - _cache_time) < CACHE_TTL:
-            return _cache
+        with _lock:
+            now = time.monotonic()
+            if _cache is not None and (now - _cache_time) < CACHE_TTL:
+                return _cache
 
-        try:
-            data = yaml.safe_load(self._config_path.read_text())
-            _cache = data
-            _cache_time = now
-            return data
-        except Exception as e:
-            logger.error("model_routing_config_error", error=str(e))
-            return _cache or {"models": {}, "defaults": {}}
+            try:
+                data = yaml.safe_load(self._config_path.read_text())
+                _cache = data
+                _cache_time = now
+                return data
+            except Exception as e:
+                logger.error("model_routing_config_error", error=str(e))
+                return _cache or {"models": {}, "defaults": {}}
 
     def resolve(self, role: str) -> ModelRoute:
         """Resolve which model to use for a given role.

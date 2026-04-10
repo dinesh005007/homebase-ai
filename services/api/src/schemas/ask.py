@@ -3,12 +3,22 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class AskRequest(BaseModel):
     question: str
     property_id: UUID
+
+    @field_validator("question")
+    @classmethod
+    def question_length(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Question must not be empty")
+        if len(v) > 5000:
+            raise ValueError("Question must be 5000 characters or fewer")
+        return v
 
 
 class AskSource(BaseModel):

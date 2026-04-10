@@ -168,10 +168,10 @@ class RAGService:
                 system=SYSTEM_PROMPT,
             )
         except Exception as e:
-            logger.error("rag_generation_error", error=str(e))
+            logger.error("rag_generation_error", error=str(e), error_type=type(e).__name__)
             latency_ms = int((time.monotonic() - start) * 1000)
             return {
-                "answer": f"I couldn't generate an answer right now. Error: {type(e).__name__}. Please check that Ollama is running with the {model} model.",
+                "answer": "I couldn't generate an answer right now. Please check that Ollama is running and try again.",
                 "sources": sources,
                 "model_used": model,
                 "latency_ms": latency_ms,

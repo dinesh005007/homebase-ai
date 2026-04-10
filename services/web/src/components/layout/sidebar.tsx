@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
   MessageSquare,
@@ -11,8 +9,6 @@ import {
   Building2,
   Wrench,
   Settings,
-  ChevronLeft,
-  ChevronRight,
   Sun,
   Moon,
   Wifi,
@@ -35,32 +31,18 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const [collapsed, setCollapsed] = useState(false);
-
   return (
     <aside
-      className={cn(
-        "fixed inset-y-0 left-0 z-30 flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-200",
-        collapsed ? "w-16" : "w-60"
-      )}
+      className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col border-r border-sidebar-border bg-sidebar"
     >
       {/* Logo */}
       <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-mono font-bold text-sm">
           H
         </div>
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.span
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: "auto" }}
-              exit={{ opacity: 0, width: 0 }}
-              className="overflow-hidden whitespace-nowrap font-semibold text-sidebar-foreground"
-            >
-              HomeBase AI
-            </motion.span>
-          )}
-        </AnimatePresence>
+        <span className="font-semibold text-sidebar-foreground">
+          HomeBase AI
+        </span>
       </div>
 
       {/* Nav */}
@@ -82,18 +64,7 @@ export function Sidebar() {
               )}
             >
               <item.icon className="h-5 w-5 shrink-0" />
-              <AnimatePresence>
-                {!collapsed && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: "auto" }}
-                    exit={{ opacity: 0, width: 0 }}
-                    className="overflow-hidden whitespace-nowrap"
-                  >
-                    {item.label}
-                  </motion.span>
-                )}
-              </AnimatePresence>
+              <span>{item.label}</span>
             </Link>
           );
         })}
@@ -110,42 +81,9 @@ export function Sidebar() {
           ) : (
             <Moon className="h-5 w-5 shrink-0" />
           )}
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="overflow-hidden whitespace-nowrap"
-              >
-                {theme === "dark" ? "Light Mode" : "Dark Mode"}
-              </motion.span>
-            )}
-          </AnimatePresence>
+          <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
         </button>
 
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent transition-colors duration-150 cursor-pointer"
-        >
-          {collapsed ? (
-            <ChevronRight className="h-5 w-5 shrink-0" />
-          ) : (
-            <ChevronLeft className="h-5 w-5 shrink-0" />
-          )}
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="overflow-hidden whitespace-nowrap"
-              >
-                Collapse
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </button>
       </div>
     </aside>
   );

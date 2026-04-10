@@ -22,6 +22,10 @@ rules:
       message: "Large tree removal can be dangerous and may require permits. Consult an arborist."
     - pattern: "hvac.*(install|refrigerant|compressor)"
       message: "HVAC installation and refrigerant work requires a licensed HVAC technician."
+    - pattern: "diagnose|medical.?condition|prescription|symptoms.*(what|could|mean)"
+      message: "I cannot provide medical diagnoses or health advice. Please consult a qualified healthcare professional."
+    - pattern: "sue|legal.?action|lawyer|liability|file.?a.?claim"
+      message: "I cannot provide legal advice. Please consult a licensed attorney for legal matters."
 
   # CAUTION — add warning label
   caution:
@@ -33,3 +37,5 @@ rules:
       message: "Check your HOA rules before proceeding. Violations may result in fines."
     - pattern: "diy.*(electric|plumb)"
       message: "For safety, ensure you understand local codes and turn off power/water before starting."
+    - pattern: "invest|stock.*(buy|sell|pick)|financial.?advice|portfolio"
+      message: "I cannot provide financial or investment advice. Please consult a licensed financial advisor."

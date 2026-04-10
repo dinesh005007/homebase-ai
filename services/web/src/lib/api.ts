@@ -161,6 +161,7 @@ export const api = {
 
   seedMaintenanceTasks: (propertyId: string) =>
     request<{ preset: string; season: string; tasks_created: number }>(
-      `/maintenance/seed-from-preset?property_id=${propertyId}`
-    , { method: "POST" }),
+      `/maintenance/seed-from-preset?property_id=${propertyId}`,
+      { method: "POST" },
+    ),
 };

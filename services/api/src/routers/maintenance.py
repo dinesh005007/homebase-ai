@@ -135,6 +135,8 @@ async def seed_from_preset(
 ) -> dict:
     """Generate maintenance tasks from a regional preset for the current season."""
     preset_path = PRESETS_DIR / f"{preset}.json"
+    if not preset_path.resolve().is_relative_to(PRESETS_DIR.resolve()):
+        raise HTTPException(status_code=400, detail="Invalid preset name")
     if not preset_path.exists():
         raise HTTPException(status_code=404, detail=f"Preset '{preset}' not found")
 

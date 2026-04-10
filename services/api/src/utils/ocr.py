@@ -5,6 +5,8 @@ from pathlib import Path
 
 logger = structlog.get_logger()
 
+MAX_PAGES = 200
+
 
 def ocr_pdf(file_path: str) -> str:
     """Convert scanned PDF pages to text using Tesseract OCR.
@@ -26,7 +28,17 @@ def ocr_pdf(file_path: str) -> str:
     try:
         # Convert PDF pages to images (200 DPI balances speed vs quality)
         images = convert_from_path(file_path, dpi=200, fmt="jpeg")
-        logger.info("ocr_pages_converted", pages=len(images))
+        total_pages = len(images)
+        logger.info("ocr_pages_converted", pages=total_pages)
+
+        if total_pages > MAX_PAGES:
+            logger.warning(
+                "ocr_truncated",
+                total_pages=total_pages,
+                max_pages=MAX_PAGES,
+                message=f"PDF has {total_pages} pages, only OCR-ing first {MAX_PAGES}",
+            )
+            images = images[:MAX_PAGES]
 
         text_parts: list[str] = []
         for i, image in enumerate(images):

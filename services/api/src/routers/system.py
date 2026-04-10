@@ -1,6 +1,5 @@
 """System monitoring and status endpoints."""
 
-import os
 import shutil
 import time
 
@@ -26,7 +25,12 @@ _start_time = time.monotonic()
 async def system_status(
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    """System health dashboard with disk, DB, Ollama, and usage stats."""
+    """System health dashboard with disk, DB, Ollama, and usage stats.
+
+    # TODO: Require authentication in production (Phase 3).
+    # This endpoint exposes disk, database, and model info that should be
+    # restricted to authenticated admin users once Supabase Auth is added.
+    """
 
     # Uptime
     uptime_seconds = int(time.monotonic() - _start_time)

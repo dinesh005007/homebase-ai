@@ -2,7 +2,7 @@
 
 
 def _approx_token_count(text: str) -> int:
-    return len(text) // 4
+    return int(len(text.split()) * 1.3)
 
 
 def _split_text(text: str, separators: list[str], chunk_size: int, overlap: int) -> list[str]:
@@ -23,7 +23,7 @@ def _split_text(text: str, separators: list[str], chunk_size: int, overlap: int)
             chunks.append(current.strip())
             # Start new chunk with overlap from the end of previous
             if overlap > 0:
-                overlap_chars = overlap * 4
+                overlap_chars = overlap * 5
                 current = current[-overlap_chars:].strip() + sep + part if len(current) > overlap_chars else part
             else:
                 current = part

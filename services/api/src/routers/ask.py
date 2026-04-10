@@ -6,7 +6,7 @@ from uuid import UUID
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.api.src.database import get_db
@@ -53,7 +53,7 @@ async def ask_question(
         logger.error("ask_endpoint_error", error=str(e), error_type=type(e).__name__)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to process question: {type(e).__name__}: {e}",
+            detail="Failed to process question. Please try again.",
         )
 
 
@@ -102,7 +102,7 @@ async def ask_stream(
             error_event = {
                 "token": "",
                 "done": True,
-                "error": f"Failed to process question: {type(e).__name__}: {e}",
+                "error": "Failed to process question. Please try again.",
             }
             yield f"data: {json.dumps(error_event)}\n\n"
 
@@ -120,6 +120,11 @@ async def list_conversations(
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ) -> ConversationListResponse:
+    count_result = await db.execute(
+        select(func.count(Conversation.id)).where(Conversation.property_id == property_id)
+    )
+    total = count_result.scalar_one()
+
     result = await db.execute(
         select(Conversation)
         .where(Conversation.property_id == property_id)
@@ -131,5 +136,5 @@ async def list_conversations(
 
     return ConversationListResponse(
         conversations=[ConversationItem.model_validate(c) for c in convs],
-        total=len(convs),
+        total=total,
     )
