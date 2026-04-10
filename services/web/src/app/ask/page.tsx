@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot, User, FileText, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { cn, generateId } from "@/lib/utils";
-import { api, type AskResponse } from "@/lib/api";
+import { api, type AskResponse, type AskSource } from "@/lib/api";
 import { usePropertyId } from "@/hooks/use-property-id";
+import { PdfViewer } from "@/components/shared/pdf-viewer";
 
 interface Message {
   id: string;
@@ -17,12 +18,30 @@ interface Message {
   confidence?: string;
 }
 
+interface ViewerState {
+  documentId: string;
+  title: string;
+  page: number | null;
+  snippet: string;
+}
+
 export default function AskPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const { propertyId } = usePropertyId();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [viewer, setViewer] = useState<ViewerState | null>(null);
+
+  const openSource = (src: AskSource) => {
+    if (!src.document_id) return;
+    setViewer({
+      documentId: src.document_id,
+      title: src.title,
+      page: src.page,
+      snippet: src.snippet || "",
+    });
+  };
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -170,9 +189,16 @@ export default function AskPage() {
                 {msg.sources && msg.sources.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {msg.sources.map((src, i) => (
-                      <span
+                      <button
                         key={i}
-                        className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-foreground"
+                        onClick={() => openSource(src)}
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-foreground transition-colors duration-150",
+                          src.document_id
+                            ? "hover:bg-primary/10 hover:text-primary cursor-pointer"
+                            : "cursor-default"
+                        )}
+                        title={src.document_id ? "Click to view source in PDF" : undefined}
                       >
                         <FileText className="h-3 w-3" />
                         {src.title}
@@ -180,7 +206,7 @@ export default function AskPage() {
                         <span className="text-muted-foreground ml-1">
                           {(src.similarity * 100).toFixed(0)}%
                         </span>
-                      </span>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -250,6 +276,17 @@ export default function AskPage() {
           </button>
         </div>
       </form>
+
+      {/* PDF Viewer Modal */}
+      {viewer && (
+        <PdfViewer
+          documentId={viewer.documentId}
+          title={viewer.title}
+          page={viewer.page}
+          snippet={viewer.snippet}
+          onClose={() => setViewer(null)}
+        />
+      )}
     </div>
   );
 }

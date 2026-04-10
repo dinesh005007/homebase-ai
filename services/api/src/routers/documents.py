@@ -2,11 +2,13 @@
 
 import os
 import tempfile
+from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
 import structlog
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy import delete, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -178,6 +180,26 @@ async def delete_document(
 
     logger.info("document_deleted", document_id=str(document_id))
     return {"status": "deleted", "document_id": str(document_id)}
+
+
+@router.get("/{document_id}/file")
+async def serve_document_file(
+    document_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> FileResponse:
+    """Serve the stored PDF file for in-browser viewing."""
+    doc = await db.get(Document, document_id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if not doc.file_path or not Path(doc.file_path).exists():
+        raise HTTPException(status_code=404, detail="File not found on disk")
+
+    return FileResponse(
+        path=doc.file_path,
+        media_type="application/pdf",
+        filename=f"{doc.title}.pdf",
+        headers={"Content-Disposition": "inline"},
+    )
 
 
 @router.post("/{document_id}/reprocess", response_model=DocumentUploadResponse)

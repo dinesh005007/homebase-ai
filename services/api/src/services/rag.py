@@ -141,6 +141,8 @@ class RAGService:
                 "title": doc_title,
                 "page": r["page_number"],
                 "similarity": round(r["similarity"], 4),
+                "document_id": str(r["document_id"]),
+                "snippet": r["content"][:500],
             })
 
         context = "\n\n---\n\n".join(context_parts)

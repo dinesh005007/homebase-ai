@@ -58,6 +58,8 @@ export interface AskSource {
   title: string;
   page: number | null;
   similarity: number;
+  document_id?: string;
+  snippet?: string;
 }
 
 export interface AskResponse {
