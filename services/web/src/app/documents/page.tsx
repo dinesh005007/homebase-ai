@@ -174,7 +174,7 @@ export default function DocumentsPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -193,7 +193,7 @@ export default function DocumentsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.05 }}
         className={cn(
-          "rounded-xl border-2 border-dashed p-6 transition-colors duration-200",
+          "rounded-xl border-2 border-dashed p-4 sm:p-6 transition-colors duration-200",
           dragOver
             ? "border-primary bg-primary/5"
             : "border-border hover:border-primary/30"
@@ -348,16 +348,16 @@ export default function DocumentsPage() {
           />
         </div>
         <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-          <div className="flex gap-1 rounded-lg border border-input bg-background p-0.5 w-max sm:w-auto sm:flex-wrap">
+          <div className="flex gap-1.5 sm:gap-1 w-max sm:w-auto sm:flex-wrap sm:rounded-lg sm:border sm:border-input sm:bg-background sm:p-0.5">
             {DOC_TYPES.map((t) => (
               <button
                 key={t.value}
                 onClick={() => setFilter(t.value)}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap min-h-[36px]",
+                  "rounded-lg sm:rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap min-h-[36px]",
                   filter === t.value
                     ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "bg-muted sm:bg-transparent text-muted-foreground hover:text-foreground"
                 )}
               >
                 {t.label}
@@ -423,7 +423,7 @@ export default function DocumentsPage() {
                         e.stopPropagation();
                         handleDelete(doc.id, doc.title);
                       }}
-                      className="opacity-0 group-hover:opacity-100 rounded-md p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-150 cursor-pointer"
+                      className="sm:opacity-0 sm:group-hover:opacity-100 rounded-md p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-150 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
                       title="Delete document"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
