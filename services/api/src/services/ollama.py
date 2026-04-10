@@ -13,6 +13,7 @@ logger = structlog.get_logger()
 MAX_RETRIES = 3
 EMBED_TIMEOUT = 30.0
 GENERATE_TIMEOUT = 180.0
+VISION_TIMEOUT = 180.0
 MAX_CONCURRENT_EMBEDS = 5
 
 
@@ -90,6 +91,28 @@ class OllamaClient:
                         chunk = json.loads(line)
                         if chunk.get("response"):
                             yield chunk["response"]
+
+    async def generate_with_image(
+        self,
+        prompt: str,
+        image_base64: str,
+        model: str = "llava:7b",
+        system: str | None = None,
+    ) -> str:
+        """Generate a response from a vision model given an image."""
+        body: dict = {
+            "model": model,
+            "prompt": prompt,
+            "images": [image_base64],
+            "stream": False,
+        }
+        if system:
+            body["system"] = system
+
+        data = await self._request_with_retry(
+            "POST", "/api/generate", json=body, timeout=VISION_TIMEOUT
+        )
+        return data["response"]
 
     async def health(self) -> bool:
         try:

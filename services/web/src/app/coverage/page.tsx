@@ -84,7 +84,7 @@ export default function CoveragePage() {
     <div className="space-y-8">
       {/* Header */}
       <motion.div {...fadeIn} transition={{ duration: 0.3 }}>
-        <h1 className="text-2xl font-bold tracking-tight">Coverage</h1>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Coverage</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Warranties, insurance, and claim assistance
         </p>
@@ -97,7 +97,7 @@ export default function CoveragePage() {
           {warranties.map((w) => (
             <div
               key={w.type}
-              className="flex items-center gap-4 rounded-xl border border-border bg-card px-5 py-4"
+              className="flex flex-wrap items-center gap-3 sm:gap-4 rounded-xl border border-border bg-card px-4 sm:px-5 py-3 sm:py-4"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
                 <ShieldCheck className="h-5 w-5 text-emerald-500" />
@@ -111,7 +111,7 @@ export default function CoveragePage() {
                 <p className="text-[11px] text-muted-foreground">expires {w.end}</p>
               </div>
               {/* Progress bar */}
-              <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
+              <div className="w-full sm:w-24 h-1.5 rounded-full bg-muted overflow-hidden">
                 <div
                   className="h-full rounded-full bg-emerald-500"
                   style={{ width: `${Math.min(100, (w.daysLeft / 365) * 100)}%` }}
@@ -150,7 +150,7 @@ export default function CoveragePage() {
             rows={3}
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none"
           />
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
@@ -158,13 +158,13 @@ export default function CoveragePage() {
                 value={estimatedCost}
                 onChange={(e) => setEstimatedCost(e.target.value)}
                 placeholder="Estimated repair cost (optional)"
-                className="w-full rounded-lg border border-input bg-background pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full rounded-lg border border-input bg-background pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring min-h-[44px]"
               />
             </div>
             <button
               onClick={handleClaimCheck}
               disabled={checking || !issueDescription || !propertyId}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors duration-150 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors duration-150 cursor-pointer min-h-[44px]"
             >
               {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : <HelpCircle className="h-4 w-4" />}
               Check Coverage
@@ -178,7 +178,7 @@ export default function CoveragePage() {
               animate={{ opacity: 1, y: 0 }}
               className="rounded-lg border border-border bg-background p-4 space-y-3"
             >
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <div className="flex items-center gap-2">
                   {claimResult.warranty_applicable ? (
                     <ShieldCheck className="h-4 w-4 text-emerald-500" />

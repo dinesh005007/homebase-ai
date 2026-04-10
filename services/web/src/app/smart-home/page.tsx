@@ -46,9 +46,9 @@ export default function SmartHomePage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <motion.div {...fadeIn} transition={{ duration: 0.3 }} className="flex items-center justify-between">
+      <motion.div {...fadeIn} transition={{ duration: 0.3 }} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Smart Home</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Smart Home</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Sensors, cameras, and device monitoring
           </p>
@@ -65,7 +65,7 @@ export default function SmartHomePage() {
       {/* Not Connected State */}
       {!loading && !haConnected && (
         <motion.div {...fadeIn} transition={{ duration: 0.3, delay: 0.05 }}>
-          <div className="rounded-xl border-2 border-dashed border-border p-12 text-center">
+          <div className="rounded-xl border-2 border-dashed border-border p-6 sm:p-12 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-4">
               <WifiOff className="h-8 w-8 text-muted-foreground" />
             </div>
@@ -88,11 +88,11 @@ export default function SmartHomePage() {
       {/* Sensor Grid (placeholder when not connected) */}
       <motion.div {...fadeIn} transition={{ duration: 0.3, delay: 0.1 }}>
         <h2 className="text-lg font-semibold mb-3">Sensors</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
           {sensorTypes.map((sensor) => (
             <div
               key={sensor.type}
-              className="rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer"
+              className="rounded-xl border border-border bg-card p-3 sm:p-4 transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer min-h-[44px]"
             >
               <div className="flex items-center gap-3">
                 <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", sensor.bg)}>

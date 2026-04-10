@@ -38,7 +38,7 @@ export default function HomeProfilePage() {
     <div className="space-y-8">
       {/* Header */}
       <motion.div {...fadeIn} transition={{ duration: 0.3 }}>
-        <h1 className="text-2xl font-bold tracking-tight">Home Profile</h1>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Home Profile</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Rooms, systems, and assets for your property
         </p>
@@ -77,14 +77,14 @@ export default function HomeProfilePage() {
       {/* Systems */}
       <motion.div {...fadeIn} transition={{ duration: 0.3, delay: 0.1 }}>
         <h2 className="text-lg font-semibold mb-3">Systems</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
           {systems.map((sys) => (
             <div
               key={sys.name}
-              className="rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer"
+              className="rounded-xl border border-border bg-card p-3 sm:p-4 transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer min-h-[44px]"
             >
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                   <sys.icon className="h-4 w-4 text-primary" />
                 </div>
                 <div>
@@ -110,10 +110,10 @@ export default function HomeProfilePage() {
           {rooms.map((room) => (
             <div
               key={room.name}
-              className="rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer"
+              className="rounded-xl border border-border bg-card p-3 sm:p-4 transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer min-h-[44px]"
             >
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
                   <DoorOpen className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div>

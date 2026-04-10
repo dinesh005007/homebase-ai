@@ -69,7 +69,7 @@ export default function SettingsPage() {
     <div className="space-y-8 max-w-2xl">
       {/* Header */}
       <motion.div {...fadeIn} transition={{ duration: 0.3 }}>
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Settings</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Configuration and system preferences
         </p>
@@ -93,11 +93,11 @@ export default function SettingsPage() {
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
               placeholder="UUID from seed script"
-              className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+              className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-ring min-h-[44px]"
             />
             <button
               onClick={savePropertyId}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors duration-150 cursor-pointer"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors duration-150 cursor-pointer min-h-[44px]"
             >
               Save
             </button>

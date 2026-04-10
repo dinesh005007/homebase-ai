@@ -8,7 +8,7 @@ from sqlalchemy import text
 
 from services.api.src.config import settings
 from services.api.src.database import engine
-from services.api.src.routers import ask, auth, coverage, documents, health, maintenance, properties, smarthome, system
+from services.api.src.routers import ask, auth, coverage, documents, health, maintenance, properties, smarthome, system, vision
 
 logger = structlog.get_logger()
 
@@ -59,3 +59,4 @@ app.include_router(maintenance.router)
 app.include_router(smarthome.router)
 app.include_router(coverage.router)
 app.include_router(system.router)
+app.include_router(vision.router)

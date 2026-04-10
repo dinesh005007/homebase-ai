@@ -33,7 +33,7 @@ export function Sidebar() {
   const { theme, setTheme } = useTheme();
   return (
     <aside
-      className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col border-r border-sidebar-border bg-sidebar"
+      className="fixed inset-y-0 left-0 z-30 hidden lg:flex w-60 flex-col border-r border-sidebar-border bg-sidebar"
     >
       {/* Logo */}
       <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">

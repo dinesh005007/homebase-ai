@@ -73,6 +73,13 @@ export interface AskResponse {
   conversation_id?: string;
 }
 
+export interface VisionAnalyzeResponse {
+  answer: string;
+  model_used: string;
+  latency_ms: number;
+  confidence: string;
+}
+
 export interface MessageItem {
   id: string;
   role: "user" | "assistant";
@@ -261,4 +268,16 @@ export const api = {
       `/maintenance/seed-from-preset?property_id=${propertyId}`,
       { method: "POST" },
     ),
+
+  // ─── Vision ───────────────────────────────────────────────────────
+  analyzeImage: async (file: File, question: string, propertyId: string): Promise<VisionAnalyzeResponse> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("question", question);
+    formData.append("property_id", propertyId);
+    return request<VisionAnalyzeResponse>("/vision/analyze", {
+      method: "POST",
+      body: formData,
+    });
+  },
 };

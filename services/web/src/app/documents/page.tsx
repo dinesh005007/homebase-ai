@@ -181,7 +181,7 @@ export default function DocumentsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <h1 className="text-2xl font-bold tracking-tight">Document Vault</h1>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Document Vault</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Upload, search, and manage your home documents
         </p>
@@ -238,18 +238,18 @@ export default function DocumentsPage() {
               animate={{ opacity: 1, height: "auto" }}
               className="space-y-3"
             >
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Document title"
-                  className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring min-h-[44px]"
                 />
                 <select
                   value={docType}
                   onChange={(e) => setDocType(e.target.value)}
-                  className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+                  className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer min-h-[44px]"
                 >
                   <option value="auto">Auto-detect type</option>
                   {DOC_TYPES.filter((t) => t.value !== "all").map((t) => (
@@ -271,7 +271,7 @@ export default function DocumentsPage() {
                   onClick={handleProcess}
                   disabled={uploading || !title}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors duration-150 cursor-pointer",
+                    "flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors duration-150 cursor-pointer min-h-[44px]",
                     uploading || !title
                       ? "bg-muted text-muted-foreground cursor-not-allowed"
                       : "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -336,32 +336,34 @@ export default function DocumentsPage() {
       </motion.div>
 
       {/* Search & Filter */}
-      <div className="flex gap-3">
-        <div className="relative flex-1">
+      <div className="space-y-3">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search documents..."
-            className="w-full rounded-lg border border-input bg-background pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-lg border border-input bg-background pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring min-h-[44px]"
           />
         </div>
-        <div className="flex gap-1 rounded-lg border border-input bg-background p-0.5">
-          {DOC_TYPES.map((t) => (
-            <button
-              key={t.value}
-              onClick={() => setFilter(t.value)}
-              className={cn(
-                "rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150 cursor-pointer",
-                filter === t.value
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex gap-1 rounded-lg border border-input bg-background p-0.5 w-max sm:w-auto sm:flex-wrap">
+            {DOC_TYPES.map((t) => (
+              <button
+                key={t.value}
+                onClick={() => setFilter(t.value)}
+                className={cn(
+                  "rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap min-h-[36px]",
+                  filter === t.value
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

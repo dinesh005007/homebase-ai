@@ -118,10 +118,10 @@ export default function MaintenancePage() {
       <motion.div
         {...fadeIn}
         transition={{ duration: 0.3 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between"
       >
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Maintenance</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Maintenance</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Tasks, schedules, and service history
           </p>
@@ -130,14 +130,14 @@ export default function MaintenancePage() {
           <button
             onClick={handleSeed}
             disabled={seeding || !propertyId}
-            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-accent transition-colors duration-150 cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-accent transition-colors duration-150 cursor-pointer disabled:opacity-50 min-h-[44px]"
           >
             {seeding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sprout className="h-4 w-4" />}
             Seed Seasonal
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors duration-150 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors duration-150 cursor-pointer min-h-[44px]"
           >
             {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
             {showForm ? "Cancel" : "Add Task"}
@@ -155,20 +155,20 @@ export default function MaintenancePage() {
             onSubmit={handleCreate}
             className="rounded-xl border border-border bg-card p-5 space-y-3 overflow-hidden"
           >
-            <div className="flex gap-3">
-              <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Task title" required className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
-              <select value={newPriority} onChange={(e) => setNewPriority(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm cursor-pointer">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Task title" required className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring min-h-[44px]" />
+              <select value={newPriority} onChange={(e) => setNewPriority(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm cursor-pointer min-h-[44px]">
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
               </select>
             </div>
-            <div className="flex gap-3">
-              <input type="text" value={newSystem} onChange={(e) => setNewSystem(e.target.value)} placeholder="System (e.g., HVAC, Plumbing)" className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
-              <input type="date" value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input type="text" value={newSystem} onChange={(e) => setNewSystem(e.target.value)} placeholder="System (e.g., HVAC, Plumbing)" className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring min-h-[44px]" />
+              <input type="date" value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring min-h-[44px]" />
             </div>
             <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Description (optional)" rows={2} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none" />
-            <button type="submit" className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors duration-150 cursor-pointer">
+            <button type="submit" className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors duration-150 cursor-pointer min-h-[44px]">
               Create Task
             </button>
           </motion.form>
@@ -199,7 +199,7 @@ export default function MaintenancePage() {
             key={f}
             onClick={() => setStatusFilter(f)}
             className={cn(
-              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150 cursor-pointer capitalize",
+              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150 cursor-pointer capitalize min-h-[36px]",
               statusFilter === f ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -218,18 +218,18 @@ export default function MaintenancePage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 8 }}
               transition={{ duration: 0.2, delay: i * 0.03 }}
-              className="flex items-center gap-4 rounded-xl border border-border bg-card px-5 py-4 transition-all duration-200 hover:shadow-md hover:border-primary/20"
+              className="flex flex-wrap items-center gap-3 sm:gap-4 rounded-xl border border-border bg-card px-4 sm:px-5 py-3 sm:py-4 transition-all duration-200 hover:shadow-md hover:border-primary/20 min-h-[44px]"
             >
               <button
                 onClick={() => handleToggleComplete(task)}
                 className={cn(
-                  "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors cursor-pointer",
+                  "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors cursor-pointer",
                   task.status === "completed"
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-muted-foreground hover:border-primary"
                 )}
               >
-                {task.status === "completed" && <CheckCircle2 className="h-3 w-3" />}
+                {task.status === "completed" && <CheckCircle2 className="h-3.5 w-3.5" />}
               </button>
               <div className="flex-1 min-w-0">
                 <p className={cn("text-sm font-medium", task.status === "completed" && "line-through text-muted-foreground")}>{task.title}</p>
@@ -241,10 +241,11 @@ export default function MaintenancePage() {
               {task.due_date && (
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <CalendarDays className="h-3 w-3" />
-                  {new Date(task.due_date).toLocaleDateString()}
+                  <span className="hidden sm:inline">{new Date(task.due_date).toLocaleDateString()}</span>
+                  <span className="sm:hidden">{new Date(task.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                 </div>
               )}
-              <button onClick={() => handleDelete(task.id)} className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer">
+              <button onClick={() => handleDelete(task.id)} className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center">
                 <Trash2 className="h-4 w-4" />
               </button>
             </motion.div>

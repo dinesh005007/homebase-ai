@@ -12,9 +12,10 @@ models:
     roles: []
     timeout: 300
   vision:
-    name: llava:13b
+    name: llava:7b
+    # llava:13b for 16GB+ RAM machines, llava:7b for 8GB
     roles: [vision]
-    timeout: 90
+    timeout: 180
   embed:
     name: nomic-embed-text
     roles: [embedding]
