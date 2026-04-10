@@ -24,15 +24,38 @@ const DOC_TYPES = [
   { value: "hoa", label: "HOA" },
   { value: "closing", label: "Closing" },
   { value: "manual", label: "Manual" },
+  { value: "inspection", label: "Inspection" },
+  { value: "permit", label: "Permit" },
+  { value: "receipt", label: "Receipt/Invoice" },
   { value: "other", label: "Other" },
 ];
+
+// Map granular backend types to UI filter categories
+function docTypeCategory(backendType: string): string {
+  if (backendType.startsWith("hoa")) return "hoa";
+  if (backendType.startsWith("insurance")) return "insurance";
+  if (backendType.startsWith("closing")) return "closing";
+  if (backendType === "inspection_report") return "inspection";
+  if (backendType === "contractor_quote" || backendType === "invoice" || backendType === "receipt") return "receipt";
+  return backendType;
+}
 
 const DOC_TYPE_COLORS: Record<string, string> = {
   warranty: "bg-emerald-500/10 text-emerald-500",
   insurance: "bg-blue-500/10 text-blue-500",
+  insurance_policy: "bg-blue-500/10 text-blue-500",
   hoa: "bg-violet-500/10 text-violet-500",
+  hoa_ccr: "bg-violet-500/10 text-violet-500",
+  hoa_architectural: "bg-violet-500/10 text-violet-500",
   closing: "bg-amber-500/10 text-amber-500",
+  closing_deed: "bg-amber-500/10 text-amber-500",
+  closing_settlement: "bg-amber-500/10 text-amber-500",
   manual: "bg-cyan-500/10 text-cyan-500",
+  inspection_report: "bg-teal-500/10 text-teal-500",
+  permit: "bg-orange-500/10 text-orange-500",
+  receipt: "bg-pink-500/10 text-pink-500",
+  invoice: "bg-pink-500/10 text-pink-500",
+  contractor_quote: "bg-pink-500/10 text-pink-500",
   other: "bg-gray-500/10 text-gray-500",
 };
 
@@ -47,6 +70,7 @@ export default function DocumentsPage() {
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   // Upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [docType, setDocType] = useState("auto");
@@ -66,20 +90,27 @@ export default function DocumentsPage() {
     loadDocuments();
   }, [loadDocuments]);
 
-  const handleUpload = async (file: File) => {
-    if (!propertyId || !title) return;
+  const stageFile = (file: File) => {
+    setSelectedFile(file);
+    setUploadResult(null);
+    // Auto-fill title from filename (strip extension)
+    const name = file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ");
+    setTitle(name);
+  };
+
+  const handleProcess = async () => {
+    if (!selectedFile || !propertyId || !title) return;
     setUploading(true);
     setUploadResult(null);
     setUploadStatus("Uploading file...");
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", selectedFile);
     formData.append("property_id", propertyId);
     formData.append("doc_type", docType);
     formData.append("title", title);
     if (description) formData.append("description", description);
 
-    // Simulate progress steps while waiting for the server
     const steps = [
       { msg: "Extracting text from PDF...", delay: 2000 },
       { msg: "Running OCR on scanned pages...", delay: 5000 },
@@ -97,6 +128,7 @@ export default function DocumentsPage() {
       setUploadResult(`Done — ${res.chunks_created} chunks indexed${typeLabel}`);
       setTitle("");
       setDescription("");
+      setSelectedFile(null);
       loadDocuments();
     } catch (err) {
       timers.forEach(clearTimeout);
@@ -113,7 +145,7 @@ export default function DocumentsPage() {
     setDragOver(false);
     const file = e.dataTransfer.files[0];
     if (file?.type === "application/pdf") {
-      handleUpload(file);
+      stageFile(file);
     }
   };
 
@@ -135,7 +167,7 @@ export default function DocumentsPage() {
   };
 
   const filtered = documents.filter((d) => {
-    if (filter !== "all" && d.doc_type !== filter) return false;
+    if (filter !== "all" && docTypeCategory(d.doc_type) !== filter) return false;
     if (search && !d.title.toLowerCase().includes(search.toLowerCase()))
       return false;
     return true;
@@ -173,70 +205,95 @@ export default function DocumentsPage() {
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
       >
-        <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-end">
-          <div className="flex-1 space-y-3 w-full">
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Document title"
-                className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              />
-              <select
-                value={docType}
-                onChange={(e) => setDocType(e.target.value)}
-                className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
-              >
-                <option value="auto">Auto-detect</option>
-                {DOC_TYPES.filter((t) => t.value !== "all").map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What is this document about? (e.g., 'Taylor Morrison 10-year structural warranty for foundation and roof')"
-              rows={2}
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+        <div className="flex-1 space-y-3 w-full">
+          {/* Step 1: Choose file */}
+          <label className={cn(
+            "flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-3 text-sm transition-colors duration-150 cursor-pointer",
+            uploading ? "opacity-50 cursor-not-allowed" : "text-muted-foreground hover:border-primary/30"
+          )}>
+            <Upload className="h-4 w-4" />
+            <span>{selectedFile ? selectedFile.name : "Choose PDF or drag & drop"}</span>
+            <input
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (!propertyId) {
+                  alert("Set your Property ID in Settings first!\n\nGo to Settings → paste your property UUID → click Save.");
+                  return;
+                }
+                stageFile(file);
+                e.target.value = "";
+              }}
+              disabled={uploading}
             />
-            {!propertyId && (
-              <p className="text-xs text-destructive">Set your Property ID in Settings first.</p>
-            )}
-            {propertyId && !title && (
-              <p className="text-xs text-amber-500">Enter a document title before uploading.</p>
-            )}
-            <label className={cn(
-              "flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-3 text-sm transition-colors duration-150 cursor-pointer",
-              uploading ? "opacity-50 cursor-not-allowed" : "text-muted-foreground hover:border-primary/30"
-            )}>
-              <Upload className="h-4 w-4" />
-              <span>Choose PDF or drag & drop</span>
-              <input
-                type="file"
-                accept=".pdf"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  if (!propertyId) {
-                    alert("Set your Property ID in Settings first!\n\nGo to Settings → paste your property UUID → click Save.");
-                    return;
-                  }
-                  if (!title) {
-                    alert("Enter a document title before uploading.");
-                    return;
-                  }
-                  handleUpload(file);
-                  e.target.value = "";
-                }}
-                disabled={uploading}
+          </label>
+
+          {/* Step 2: Review details (shown after file is selected) */}
+          {selectedFile && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="space-y-3"
+            >
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Document title"
+                  className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                <select
+                  value={docType}
+                  onChange={(e) => setDocType(e.target.value)}
+                  className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+                >
+                  <option value="auto">Auto-detect type</option>
+                  {DOC_TYPES.filter((t) => t.value !== "all").map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Optional: describe what this document is about (helps AI classification)"
+                rows={2}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none"
               />
-            </label>
-          </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleProcess}
+                  disabled={uploading || !title}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors duration-150 cursor-pointer",
+                    uploading || !title
+                      ? "bg-muted text-muted-foreground cursor-not-allowed"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
+                  )}
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Process & Upload
+                </button>
+                <button
+                  onClick={() => { setSelectedFile(null); setTitle(""); setDescription(""); setUploadResult(null); }}
+                  disabled={uploading}
+                  className="rounded-lg border border-input px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {!propertyId && !selectedFile && (
+            <p className="text-xs text-destructive">Set your Property ID in Settings first.</p>
+          )}
         </div>
         <AnimatePresence>
           {(uploading || uploadResult) && (
