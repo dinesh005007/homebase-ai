@@ -14,3 +14,4 @@ pyyaml==6.*
 pyjwt==2.*
 pytesseract==0.3.*
 pdf2image==1.*
+psutil==6.*

@@ -1,8 +1,10 @@
 """System monitoring and status endpoints."""
 
+import os
 import shutil
 import time
 
+import psutil
 import structlog
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select, text
@@ -91,4 +93,68 @@ async def system_status(
             "ai_runs": ai_run_count,
             "audit_events": audit_count,
         },
+    }
+
+
+def _find_service_processes() -> list[dict]:
+    """Find resource usage for known HomeBase services."""
+    services: list[dict] = []
+    targets = {
+        "uvicorn": "API Server",
+        "next-server": "Frontend (Next.js)",
+        "node": "Frontend (Node)",
+        "postgres": "PostgreSQL",
+        "redis-server": "Redis",
+        "ollama": "Ollama",
+        "tesseract": "Tesseract OCR",
+    }
+
+    for proc in psutil.process_iter(["pid", "name", "cmdline", "cpu_percent", "memory_info"]):
+        try:
+            info = proc.info
+            name = info["name"] or ""
+            cmdline = " ".join(info["cmdline"] or [])
+            matched_label = None
+
+            for key, label in targets.items():
+                if key in name.lower() or key in cmdline.lower():
+                    matched_label = label
+                    break
+
+            if matched_label:
+                mem = info["memory_info"]
+                services.append({
+                    "name": matched_label,
+                    "pid": info["pid"],
+                    "cpu_percent": round(proc.cpu_percent(interval=0), 1),
+                    "memory_mb": round(mem.rss / (1024 * 1024), 1) if mem else 0,
+                })
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+
+    # Deduplicate by name — keep highest memory usage per service
+    seen: dict[str, dict] = {}
+    for svc in services:
+        existing = seen.get(svc["name"])
+        if not existing or svc["memory_mb"] > existing["memory_mb"]:
+            seen[svc["name"]] = svc
+    return list(seen.values())
+
+
+@router.get("/resources")
+async def system_resources() -> dict:
+    """Per-service resource usage on the host machine."""
+    # System-wide stats
+    mem = psutil.virtual_memory()
+    cpu_percent = psutil.cpu_percent(interval=0.5)
+
+    return {
+        "host": {
+            "cpu_percent": cpu_percent,
+            "cpu_count": psutil.cpu_count(),
+            "memory_total_gb": round(mem.total / (1024**3), 1),
+            "memory_used_gb": round(mem.used / (1024**3), 1),
+            "memory_percent": mem.percent,
+        },
+        "services": _find_service_processes(),
     }

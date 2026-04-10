@@ -164,6 +164,20 @@ export const api = {
   deleteMaintenanceTask: (taskId: string) =>
     request<{ status: string }>(`/maintenance/tasks/${taskId}`, { method: "DELETE" }),
 
+  systemStatus: () => request<{
+    version: string;
+    uptime_seconds: number;
+    database: { status: string; size: string | null };
+    ollama: { status: string; models: string[] };
+    disk: { total_gb: number; used_gb: number; free_gb: number; percent_used: number };
+    usage: { documents: number; conversations: number; ai_runs: number; audit_events: number };
+  }>("/system/status"),
+
+  systemResources: () => request<{
+    host: { cpu_percent: number; cpu_count: number; memory_total_gb: number; memory_used_gb: number; memory_percent: number };
+    services: { name: string; pid: number; cpu_percent: number; memory_mb: number }[];
+  }>("/system/resources"),
+
   seedMaintenanceTasks: (propertyId: string) =>
     request<{ preset: string; season: string; tasks_created: number }>(
       `/maintenance/seed-from-preset?property_id=${propertyId}`,
