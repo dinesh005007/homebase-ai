@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -31,6 +32,8 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   return (
     <aside
       className="fixed inset-y-0 left-0 z-30 hidden lg:flex w-60 flex-col border-r border-sidebar-border bg-sidebar"
@@ -72,18 +75,19 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="border-t border-sidebar-border px-2 py-3 space-y-1">
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent transition-colors duration-150 cursor-pointer"
-        >
-          {theme === "dark" ? (
-            <Sun className="h-5 w-5 shrink-0" />
-          ) : (
-            <Moon className="h-5 w-5 shrink-0" />
-          )}
-          <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-        </button>
-
+        {mounted && (
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent transition-colors duration-150 cursor-pointer"
+          >
+            {theme === "dark" ? (
+              <Sun className="h-5 w-5 shrink-0" />
+            ) : (
+              <Moon className="h-5 w-5 shrink-0" />
+            )}
+            <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+          </button>
+        )}
       </div>
     </aside>
   );
