@@ -70,18 +70,36 @@ export interface AskResponse {
   confidence: string;
   intent?: string;
   safety_level?: string;
+  conversation_id?: string;
 }
 
-export interface ConversationItem {
+export interface MessageItem {
   id: string;
-  question: string;
-  answer: string;
+  role: "user" | "assistant";
+  content: string;
   intent: string | null;
   model_used: string | null;
   latency_ms: number | null;
   confidence: string | null;
-  created_at: string;
+  safety_level: string | null;
   sources?: AskSource[];
+  created_at: string;
+}
+
+export interface ConversationItem {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  message_count: number;
+  last_message: string | null;
+}
+
+export interface ConversationDetail {
+  id: string;
+  title: string;
+  created_at: string;
+  messages: MessageItem[];
 }
 
 export interface MaintenanceTask {
@@ -120,29 +138,49 @@ export const api = {
       method: "DELETE",
     }),
 
+  // ─── Conversations (threads) ──────────────────────────────────────
   listConversations: (propertyId: string, limit = 50) =>
     request<{ conversations: ConversationItem[]; total: number }>(
       `/conversations?property_id=${propertyId}&limit=${limit}`
     ),
 
+  getConversation: (conversationId: string) =>
+    request<ConversationDetail>(`/conversations/${conversationId}`),
+
   deleteConversation: (conversationId: string) =>
     request<{ status: string }>(`/conversations/${conversationId}`, { method: "DELETE" }),
+
+  renameConversation: (conversationId: string, title: string) =>
+    request<{ status: string; id: string; title: string }>(`/conversations/${conversationId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    }),
 
   clearConversations: (propertyId: string) =>
     request<{ status: string; deleted: number }>(`/conversations?property_id=${propertyId}`, { method: "DELETE" }),
 
-  ask: (question: string, propertyId: string) =>
+  // ─── Ask (with optional conversation_id for follow-ups) ───────────
+  ask: (question: string, propertyId: string, conversationId?: string) =>
     request<AskResponse>("/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, property_id: propertyId }),
+      body: JSON.stringify({
+        question,
+        property_id: propertyId,
+        conversation_id: conversationId || null,
+      }),
     }),
 
-  askStream: async function* (question: string, propertyId: string) {
+  askStream: async function* (question: string, propertyId: string, conversationId?: string) {
     const res = await fetch(`${getBase()}/ask/stream`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, property_id: propertyId }),
+      body: JSON.stringify({
+        question,
+        property_id: propertyId,
+        conversation_id: conversationId || null,
+      }),
     });
     if (!res.ok || !res.body) throw new Error("Stream failed");
 
@@ -161,12 +199,24 @@ export const api = {
       for (const line of lines) {
         if (line.startsWith("data: ")) {
           const data = JSON.parse(line.slice(6));
-          yield data as { token: string; done: boolean; error?: string; sources?: AskSource[]; model_used?: string; latency_ms?: number; confidence?: string; intent?: string; safety_level?: string };
+          yield data as {
+            token: string;
+            done: boolean;
+            error?: string;
+            sources?: AskSource[];
+            model_used?: string;
+            latency_ms?: number;
+            confidence?: string;
+            intent?: string;
+            safety_level?: string;
+            conversation_id?: string;
+          };
         }
       }
     }
   },
 
+  // ─── Maintenance ──────────────────────────────────────────────────
   listMaintenanceTasks: (propertyId: string, filters?: { status?: string; priority?: string }) => {
     const params = new URLSearchParams({ property_id: propertyId });
     if (filters?.status) params.set("status", filters.status);
@@ -191,6 +241,7 @@ export const api = {
   deleteMaintenanceTask: (taskId: string) =>
     request<{ status: string }>(`/maintenance/tasks/${taskId}`, { method: "DELETE" }),
 
+  // ─── System ───────────────────────────────────────────────────────
   systemStatus: () => request<{
     version: string;
     uptime_seconds: number;

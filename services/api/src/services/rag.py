@@ -8,6 +8,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.api.src.models.document import Document, DocumentChunk
+from services.api.src.services.compactor import compact_history
 from services.api.src.services.context import ContextAssemblyService
 from services.api.src.services.embeddings import EmbeddingService
 from services.api.src.services.intent import IntentService
@@ -43,6 +44,7 @@ class RAGService:
         question: str,
         property_id: UUID,
         db: AsyncSession,
+        conversation_history: list[dict] | None = None,
     ) -> dict:
         start = time.monotonic()
         logger.info("rag_query_start", question=question[:100], property_id=str(property_id))
@@ -152,11 +154,18 @@ class RAGService:
         if intent not in ("hoa_question", "insurance_question", "warranty_question"):
             home_context = await self.context_service.build_context(property_id, db)
 
+        # Compact conversation history for follow-up context (token-efficient)
+        history_section = ""
+        if conversation_history:
+            compacted = compact_history(conversation_history)
+            if compacted:
+                history_section = f"Prior conversation:\n{compacted}\n\n"
+
         # Question-first prompt: more salient for small models
         if home_context:
-            prompt = f"Question: {question}\n\nHome Profile:\n{home_context}\n\nDocument Context:\n{context}"
+            prompt = f"{history_section}Question: {question}\n\nHome Profile:\n{home_context}\n\nDocument Context:\n{context}"
         else:
-            prompt = f"Question: {question}\n\nDocument Context:\n{context}"
+            prompt = f"{history_section}Question: {question}\n\nDocument Context:\n{context}"
 
         # Generate answer
         from services.api.src.services.router import get_model_router

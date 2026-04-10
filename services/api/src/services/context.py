@@ -7,7 +7,6 @@ import structlog
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from services.api.src.models.conversation import Conversation
 from services.api.src.models.document import Document
 from services.api.src.models.property import Property
 
@@ -77,20 +76,8 @@ class ContextAssemblyService:
             doc_summary = ", ".join(f"{count} {dtype}" for dtype, count in doc_counts.items())
             parts.append(f"Documents on file: {doc_summary}")
 
-        # Recent conversation context (last 3 exchanges)
-        conv_result = await db.execute(
-            select(Conversation)
-            .where(Conversation.property_id == property_id)
-            .order_by(Conversation.created_at.desc())
-            .limit(3)
-        )
-        convs = list(reversed(conv_result.scalars().all()))
-        if convs:
-            history = []
-            for c in convs:
-                history.append(f"Q: {c.question[:100]}")
-                history.append(f"A: {c.answer[:150]}")
-            parts.append("Recent conversation:\n" + "\n".join(history))
+        # Note: Conversation history is now injected directly via the compactor service,
+        # not through home graph context. This avoids double-counting history tokens.
 
         context = "\n".join(parts)
         logger.debug("context_assembled", length=len(context))

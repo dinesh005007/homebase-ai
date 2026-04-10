@@ -1,4 +1,4 @@
-"""Pydantic schemas for the /ask endpoint."""
+"""Pydantic schemas for the /ask and /conversations endpoints."""
 
 from datetime import datetime
 from uuid import UUID
@@ -9,6 +9,7 @@ from pydantic import BaseModel, field_validator
 class AskRequest(BaseModel):
     question: str
     property_id: UUID
+    conversation_id: UUID | None = None  # None = start new thread
 
     @field_validator("question")
     @classmethod
@@ -35,19 +36,40 @@ class AskResponse(BaseModel):
     confidence: str
     intent: str | None = None
     safety_level: str | None = None
+    conversation_id: str | None = None  # thread ID for follow-ups
+
+
+class MessageItem(BaseModel):
+    id: UUID
+    role: str
+    content: str
+    intent: str | None = None
+    model_used: str | None = None
+    latency_ms: int | None = None
+    confidence: str | None = None
+    safety_level: str | None = None
+    sources: list | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
 
 
 class ConversationItem(BaseModel):
     id: UUID
-    question: str
-    answer: str
-    intent: str | None
-    model_used: str | None
-    latency_ms: int | None
-    confidence: str | None
+    title: str
     created_at: datetime
+    updated_at: datetime
+    message_count: int = 0
+    last_message: str | None = None  # preview of last message content
 
     model_config = {"from_attributes": True}
+
+
+class ConversationDetail(BaseModel):
+    id: UUID
+    title: str
+    created_at: datetime
+    messages: list[MessageItem]
 
 
 class ConversationListResponse(BaseModel):

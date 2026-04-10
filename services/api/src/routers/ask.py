@@ -8,22 +8,73 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from services.api.src.database import get_db
-from services.api.src.models.conversation import Conversation
-from services.api.src.schemas.ask import AskRequest, AskResponse, ConversationItem, ConversationListResponse
+from services.api.src.models.conversation import Conversation, Message
+from services.api.src.schemas.ask import (
+    AskRequest,
+    AskResponse,
+    ConversationDetail,
+    ConversationItem,
+    ConversationListResponse,
+    MessageItem,
+)
 from services.api.src.services.rag import RAGService
 from services.api.src.utils.rate_limit import sse_limiter
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/api/v1", tags=["ask"])
 
+# Max conversation history exchanges to include in RAG context
+MAX_HISTORY_EXCHANGES = 3
 
-async def _save_conversation(result: dict, request: AskRequest, db: AsyncSession) -> None:
-    conv = Conversation(
-        property_id=request.property_id,
-        question=request.question,
-        answer=result["answer"],
+
+async def _get_or_create_conversation(
+    request: AskRequest, db: AsyncSession
+) -> Conversation:
+    """Get existing conversation thread or create a new one."""
+    if request.conversation_id:
+        conv = await db.get(Conversation, request.conversation_id)
+        if not conv:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        if conv.property_id != request.property_id:
+            raise HTTPException(status_code=400, detail="Conversation belongs to a different property")
+        return conv
+
+    # Create new conversation thread, titled from first question
+    title = request.question[:100].strip()
+    conv = Conversation(property_id=request.property_id, title=title)
+    db.add(conv)
+    await db.flush()  # get the ID
+    return conv
+
+
+async def _get_conversation_history(conv_id: UUID, db: AsyncSession) -> list[dict]:
+    """Get recent messages from conversation for RAG context."""
+    result = await db.execute(
+        select(Message)
+        .where(Message.conversation_id == conv_id)
+        .order_by(Message.created_at.desc())
+        .limit(MAX_HISTORY_EXCHANGES * 2)  # user + assistant pairs
+    )
+    messages = list(reversed(result.scalars().all()))
+    return [{"role": m.role, "content": m.content} for m in messages]
+
+
+async def _save_messages(
+    conv: Conversation, question: str, result: dict, db: AsyncSession
+) -> None:
+    """Save both user question and assistant answer as messages."""
+    user_msg = Message(
+        conversation_id=conv.id,
+        role="user",
+        content=question,
+    )
+    assistant_msg = Message(
+        conversation_id=conv.id,
+        role="assistant",
+        content=result["answer"],
         intent=result.get("intent"),
         model_used=result.get("model_used"),
         latency_ms=result.get("latency_ms"),
@@ -31,7 +82,10 @@ async def _save_conversation(result: dict, request: AskRequest, db: AsyncSession
         safety_level=result.get("safety_level"),
         sources=result.get("sources"),
     )
-    db.add(conv)
+    db.add(user_msg)
+    db.add(assistant_msg)
+    # Update conversation timestamp
+    conv.updated_at = func.now()
     await db.commit()
 
 
@@ -41,15 +95,23 @@ async def ask_question(
     db: AsyncSession = Depends(get_db),
 ) -> AskResponse:
     try:
+        conv = await _get_or_create_conversation(request, db)
+
+        # Get conversation history for context
+        history = await _get_conversation_history(conv.id, db)
+
         service = RAGService()
         result = await service.ask(
             question=request.question,
             property_id=request.property_id,
             db=db,
+            conversation_history=history,
         )
 
-        await _save_conversation(result, request, db)
-        return AskResponse(**result)
+        await _save_messages(conv, request.question, result, db)
+        return AskResponse(**result, conversation_id=str(conv.id))
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error("ask_endpoint_error", error=str(e), error_type=type(e).__name__)
         raise HTTPException(
@@ -72,6 +134,9 @@ async def ask_stream(
             detail="Too many requests. Please wait a moment before asking again.",
         )
 
+    conv = await _get_or_create_conversation(request, db)
+    history = await _get_conversation_history(conv.id, db)
+
     async def event_generator():
         try:
             service = RAGService()
@@ -79,14 +144,13 @@ async def ask_stream(
                 question=request.question,
                 property_id=request.property_id,
                 db=db,
+                conversation_history=history,
             )
 
             # Stream the answer token-by-token (simulated chunking for now)
             answer = result["answer"]
             words = answer.split(" ")
-            streamed = []
-            for i, word in enumerate(words):
-                streamed.append(word)
+            for word in words:
                 chunk_data = {"token": word + " ", "done": False}
                 yield f"data: {json.dumps(chunk_data)}\n\n"
 
@@ -100,10 +164,11 @@ async def ask_stream(
                 "confidence": result.get("confidence"),
                 "intent": result.get("intent"),
                 "safety_level": result.get("safety_level"),
+                "conversation_id": str(conv.id),
             }
             yield f"data: {json.dumps(final)}\n\n"
 
-            await _save_conversation(result, request, db)
+            await _save_messages(conv, request.question, result, db)
 
         except Exception as e:
             logger.error("ask_stream_error", error=str(e), error_type=type(e).__name__)
@@ -128,35 +193,89 @@ async def list_conversations(
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ) -> ConversationListResponse:
+    # Count total
     count_result = await db.execute(
         select(func.count(Conversation.id)).where(Conversation.property_id == property_id)
     )
     total = count_result.scalar_one()
 
+    # Get conversations with message count and last message preview
     result = await db.execute(
         select(Conversation)
         .where(Conversation.property_id == property_id)
-        .order_by(Conversation.created_at.desc())
+        .order_by(Conversation.updated_at.desc())
         .offset(offset)
         .limit(limit)
     )
     convs = result.scalars().all()
 
-    return ConversationListResponse(
-        conversations=[ConversationItem.model_validate(c) for c in convs],
-        total=total,
-    )
+    items = []
+    for c in convs:
+        # Count messages
+        msg_count_result = await db.execute(
+            select(func.count(Message.id)).where(Message.conversation_id == c.id)
+        )
+        msg_count = msg_count_result.scalar_one()
+
+        # Get last message preview
+        last_msg_result = await db.execute(
+            select(Message.content)
+            .where(Message.conversation_id == c.id, Message.role == "assistant")
+            .order_by(Message.created_at.desc())
+            .limit(1)
+        )
+        last_msg = last_msg_result.scalar_one_or_none()
+
+        items.append(ConversationItem(
+            id=c.id,
+            title=c.title,
+            created_at=c.created_at,
+            updated_at=c.updated_at,
+            message_count=msg_count,
+            last_message=last_msg[:150] if last_msg else None,
+        ))
+
+    return ConversationListResponse(conversations=items, total=total)
 
 
-@router.get("/conversations/{conversation_id}", response_model=ConversationItem)
+@router.get("/conversations/{conversation_id}", response_model=ConversationDetail)
 async def get_conversation(
     conversation_id: UUID,
     db: AsyncSession = Depends(get_db),
-) -> ConversationItem:
+) -> ConversationDetail:
+    result = await db.execute(
+        select(Conversation)
+        .where(Conversation.id == conversation_id)
+        .options(selectinload(Conversation.messages))
+    )
+    conv = result.scalar_one_or_none()
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    return ConversationDetail(
+        id=conv.id,
+        title=conv.title,
+        created_at=conv.created_at,
+        messages=[MessageItem.model_validate(m) for m in conv.messages],
+    )
+
+
+@router.patch("/conversations/{conversation_id}")
+async def update_conversation(
+    conversation_id: UUID,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Update conversation title."""
     conv = await db.get(Conversation, conversation_id)
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found")
-    return ConversationItem.model_validate(conv)
+
+    if "title" in body:
+        conv.title = str(body["title"])[:200]
+        await db.commit()
+
+    return {"status": "updated", "id": str(conv.id), "title": conv.title}
 
 
 @router.delete("/conversations/{conversation_id}")
@@ -167,7 +286,7 @@ async def delete_conversation(
     conv = await db.get(Conversation, conversation_id)
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found")
-    await db.delete(conv)
+    await db.delete(conv)  # cascade deletes messages
     await db.commit()
     return {"status": "deleted"}
 
