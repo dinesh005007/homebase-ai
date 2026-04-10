@@ -6,7 +6,7 @@ from uuid import UUID
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.api.src.database import get_db
@@ -146,3 +146,39 @@ async def list_conversations(
         conversations=[ConversationItem.model_validate(c) for c in convs],
         total=total,
     )
+
+
+@router.get("/conversations/{conversation_id}", response_model=ConversationItem)
+async def get_conversation(
+    conversation_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> ConversationItem:
+    conv = await db.get(Conversation, conversation_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return ConversationItem.model_validate(conv)
+
+
+@router.delete("/conversations/{conversation_id}")
+async def delete_conversation(
+    conversation_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    conv = await db.get(Conversation, conversation_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    await db.delete(conv)
+    await db.commit()
+    return {"status": "deleted"}
+
+
+@router.delete("/conversations")
+async def clear_conversations(
+    property_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    result = await db.execute(
+        delete(Conversation).where(Conversation.property_id == property_id)
+    )
+    await db.commit()
+    return {"status": "cleared", "deleted": result.rowcount}

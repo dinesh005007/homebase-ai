@@ -68,6 +68,20 @@ export interface AskResponse {
   model_used: string;
   latency_ms: number;
   confidence: string;
+  intent?: string;
+  safety_level?: string;
+}
+
+export interface ConversationItem {
+  id: string;
+  question: string;
+  answer: string;
+  intent: string | null;
+  model_used: string | null;
+  latency_ms: number | null;
+  confidence: string | null;
+  created_at: string;
+  sources?: AskSource[];
 }
 
 export interface MaintenanceTask {
@@ -105,6 +119,17 @@ export const api = {
     request<{ status: string; document_id: string }>(`/documents/${documentId}`, {
       method: "DELETE",
     }),
+
+  listConversations: (propertyId: string, limit = 50) =>
+    request<{ conversations: ConversationItem[]; total: number }>(
+      `/conversations?property_id=${propertyId}&limit=${limit}`
+    ),
+
+  deleteConversation: (conversationId: string) =>
+    request<{ status: string }>(`/conversations/${conversationId}`, { method: "DELETE" }),
+
+  clearConversations: (propertyId: string) =>
+    request<{ status: string; deleted: number }>(`/conversations?property_id=${propertyId}`, { method: "DELETE" }),
 
   ask: (question: string, propertyId: string) =>
     request<AskResponse>("/ask", {
