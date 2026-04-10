@@ -12,6 +12,7 @@ import {
   Loader2,
   File,
   Clock,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, type DocumentListItem } from "@/lib/api";
@@ -97,6 +98,16 @@ export default function DocumentsPage() {
     const file = e.dataTransfer.files[0];
     if (file?.type === "application/pdf") {
       handleUpload(file);
+    }
+  };
+
+  const handleDelete = async (docId: string, title: string) => {
+    if (!confirm(`Delete "${title}"? This will remove the document and all its embeddings.`)) return;
+    try {
+      await api.deleteDocument(docId);
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
+    } catch (err) {
+      alert(`Failed to delete: ${err instanceof Error ? err.message : "Unknown error"}`);
     }
   };
 
@@ -291,11 +302,23 @@ export default function DocumentsPage() {
                       </span>
                     )}
                   </div>
-                  <div className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {doc.ingested_at
-                      ? new Date(doc.ingested_at).toLocaleDateString()
-                      : "Processing..."}
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {doc.ingested_at
+                        ? new Date(doc.ingested_at).toLocaleDateString()
+                        : "Processing..."}
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(doc.id, doc.title);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 rounded-md p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-150 cursor-pointer"
+                      title="Delete document"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>

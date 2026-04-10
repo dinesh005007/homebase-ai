@@ -153,6 +153,33 @@ async def batch_upload(
     return BatchUploadResponse(results=results, total=len(results))
 
 
+@router.delete("/{document_id}")
+async def delete_document(
+    document_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Delete a document and all its chunks and entity links."""
+    doc = await db.get(Document, document_id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    # Delete related records first
+    await db.execute(delete(DocumentEntityLink).where(DocumentEntityLink.document_id == document_id))
+    await db.execute(delete(DocumentChunk).where(DocumentChunk.document_id == document_id))
+    await db.delete(doc)
+    await db.commit()
+
+    # Remove stored file if it exists
+    if doc.file_path:
+        try:
+            os.unlink(doc.file_path)
+        except OSError:
+            pass
+
+    logger.info("document_deleted", document_id=str(document_id))
+    return {"status": "deleted", "document_id": str(document_id)}
+
+
 @router.post("/{document_id}/reprocess", response_model=DocumentUploadResponse)
 async def reprocess_document(
     document_id: UUID,

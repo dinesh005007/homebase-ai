@@ -99,6 +99,11 @@ export const api = {
       `/documents?property_id=${propertyId}`
     ),
 
+  deleteDocument: (documentId: string) =>
+    request<{ status: string; document_id: string }>(`/documents/${documentId}`, {
+      method: "DELETE",
+    }),
+
   ask: (question: string, propertyId: string) =>
     request<AskResponse>("/ask", {
       method: "POST",
