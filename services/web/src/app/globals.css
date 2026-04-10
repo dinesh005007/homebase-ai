@@ -82,15 +82,6 @@
 }
 
 @layer utilities {
-  .glass {
-    @apply bg-white/5 backdrop-blur-md border border-white/10;
-  }
-  .glass-card {
-    @apply bg-white/5 backdrop-blur-lg border border-white/[0.15] shadow-lg;
-  }
-  .glass-subtle {
-    @apply bg-white/[0.03] backdrop-blur-sm border border-white/[0.08];
-  }
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

@@ -65,10 +65,8 @@ export default function SmartHomePage() {
       {/* Not Connected State */}
       {!loading && !haConnected && (
         <motion.div {...fadeIn} transition={{ duration: 0.3, delay: 0.05 }}>
-          <div className="rounded-xl border-2 border-dashed border-border p-6 sm:p-12 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-4">
-              <WifiOff className="h-8 w-8 text-muted-foreground" />
-            </div>
+          <div className="rounded-2xl border-2 border-dashed border-border p-6 sm:p-12 text-center">
+            <WifiOff className="h-10 w-10 text-muted-foreground/30 mb-4" />
             <h2 className="text-lg font-semibold">Home Assistant Not Connected</h2>
             <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
               Set <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">HA_URL</code> and{" "}
@@ -92,12 +90,10 @@ export default function SmartHomePage() {
           {sensorTypes.map((sensor) => (
             <div
               key={sensor.type}
-              className="rounded-xl border border-border bg-card p-3 sm:p-4 transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer min-h-[44px]"
+              className="rounded-2xl border border-border bg-card p-3 sm:p-4 transition-colors duration-200 hover:bg-accent/50 cursor-pointer min-h-[44px]"
             >
               <div className="flex items-center gap-3">
-                <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", sensor.bg)}>
-                  <sensor.icon className={cn("h-5 w-5", sensor.color)} />
-                </div>
+                <sensor.icon className={cn("h-5 w-5 shrink-0", sensor.color)} />
                 <div>
                   <p className="text-sm font-medium capitalize">{sensor.type}</p>
                   <p className="text-xs text-muted-foreground">
@@ -122,7 +118,7 @@ export default function SmartHomePage() {
           {["Front Door", "Backyard", "Garage"].map((name) => (
             <div
               key={name}
-              className="rounded-xl border border-border bg-card overflow-hidden cursor-pointer hover:shadow-md hover:border-primary/20 transition-all duration-200"
+              className="rounded-2xl border border-border bg-card overflow-hidden cursor-pointer hover:bg-accent/50 transition-colors duration-200"
             >
               <div className="aspect-video bg-muted flex items-center justify-center">
                 <Camera className="h-8 w-8 text-muted-foreground" />
@@ -141,9 +137,9 @@ export default function SmartHomePage() {
       {/* Alerts */}
       <motion.div {...fadeIn} transition={{ duration: 0.3, delay: 0.2 }}>
         <h2 className="text-lg font-semibold mb-3">Alerts</h2>
-        <div className="rounded-xl border border-border bg-card p-6">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <div className="flex flex-col items-center justify-center py-6 text-center">
-            <CheckCircle2 className="h-8 w-8 text-emerald-500 mb-2" />
+            <CheckCircle2 className="h-8 w-8 text-emerald-500/40 mb-2" />
             <p className="text-sm font-medium">No active alerts</p>
             <p className="text-xs text-muted-foreground mt-1">
               Sensor alerts will appear here when Home Assistant is connected

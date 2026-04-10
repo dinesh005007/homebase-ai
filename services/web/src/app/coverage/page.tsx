@@ -97,11 +97,9 @@ export default function CoveragePage() {
           {warranties.map((w) => (
             <div
               key={w.type}
-              className="flex flex-wrap items-center gap-3 sm:gap-4 rounded-xl border border-border bg-card px-4 sm:px-5 py-3 sm:py-4"
+              className="flex flex-wrap items-center gap-3 sm:gap-4 rounded-2xl border border-border bg-card px-4 sm:px-5 py-3 sm:py-4"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
-                <ShieldCheck className="h-5 w-5 text-emerald-500" />
-              </div>
+              <ShieldCheck className="h-5 w-5 text-emerald-500 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{w.type}</p>
                 <p className="text-xs text-muted-foreground">{w.provider}</p>
@@ -125,9 +123,9 @@ export default function CoveragePage() {
       {/* Insurance Summary */}
       <motion.div {...fadeIn} transition={{ duration: 0.3, delay: 0.1 }}>
         <h2 className="text-lg font-semibold mb-3">Insurance</h2>
-        <div className="rounded-xl border border-border bg-card p-6">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <div className="flex flex-col items-center justify-center py-4 text-center">
-            <Shield className="h-8 w-8 text-muted-foreground mb-2" />
+            <Shield className="h-8 w-8 text-muted-foreground/20 mb-2" />
             <p className="text-sm font-medium">No insurance policies added</p>
             <p className="text-xs text-muted-foreground mt-1">
               Upload your insurance policy document to auto-extract coverage details
@@ -139,7 +137,7 @@ export default function CoveragePage() {
       {/* Claim Check Assistant */}
       <motion.div {...fadeIn} transition={{ duration: 0.3, delay: 0.15 }}>
         <h2 className="text-lg font-semibold mb-3">Claim Check Assistant</h2>
-        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
           <p className="text-sm text-muted-foreground">
             Describe an issue and we'll check if it's covered by warranty or insurance.
           </p>

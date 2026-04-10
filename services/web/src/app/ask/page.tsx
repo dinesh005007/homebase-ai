@@ -441,9 +441,7 @@ export default function AskPage() {
               className="md:hidden flex h-9 w-9 items-center justify-center rounded-lg hover:bg-accent transition-colors cursor-pointer">
               <Menu className="h-5 w-5" />
             </button>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <Sparkles className="h-4 w-4 text-primary" />
-            </div>
+            <Sparkles className="h-5 w-5 text-primary" />
             <div>
               <h1 className="text-sm font-semibold">HomeBase AI</h1>
               <p className="text-[11px] text-muted-foreground truncate max-w-[200px]">
@@ -458,9 +456,7 @@ export default function AskPage() {
         <div ref={scrollRef} className="flex-1 overflow-y-auto">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full px-4 sm:px-6">
-              <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-primary/10 mb-4 sm:mb-5">
-                <Bot className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-              </div>
+              <Bot className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/30 mb-4 sm:mb-5" />
               <h2 className="text-base sm:text-lg font-semibold text-center">What can I help you with?</h2>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-md text-center">
                 Ask about your documents or take a photo for AI analysis.
@@ -468,7 +464,7 @@ export default function AskPage() {
               <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg w-full">
                 {SUGGESTIONS.map((q) => (
                   <button key={q} onClick={() => handleSubmit(q)} disabled={loading || !propertyId}
-                    className="rounded-xl border border-border bg-card px-4 py-3 text-left text-xs text-muted-foreground hover:border-primary/30 hover:text-foreground hover:bg-accent/50 transition-all duration-150 cursor-pointer disabled:opacity-50 min-h-[44px]">
+                    className="rounded-2xl border border-border bg-card px-4 py-3 text-left text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors duration-150 cursor-pointer disabled:opacity-50 min-h-[44px]">
                     {q}
                   </button>
                 ))}

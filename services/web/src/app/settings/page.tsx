@@ -79,7 +79,7 @@ export default function SettingsPage() {
       <motion.div
         {...fadeIn}
         transition={{ duration: 0.3, delay: 0.05 }}
-        className="rounded-xl border border-border bg-card p-6 space-y-4"
+        className="rounded-2xl border border-border bg-card p-6 space-y-4"
       >
         <div className="flex items-center gap-3">
           <Key className="h-5 w-5 text-primary" />
@@ -112,7 +112,7 @@ export default function SettingsPage() {
       <motion.div
         {...fadeIn}
         transition={{ duration: 0.3, delay: 0.1 }}
-        className="rounded-xl border border-border bg-card p-6 space-y-5"
+        className="rounded-2xl border border-border bg-card p-6 space-y-5"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -206,7 +206,7 @@ export default function SettingsPage() {
       <motion.div
         {...fadeIn}
         transition={{ duration: 0.3, delay: 0.15 }}
-        className="rounded-xl border border-border bg-card p-6 space-y-4"
+        className="rounded-2xl border border-border bg-card p-6 space-y-4"
       >
         <div className="flex items-center gap-3">
           <Cpu className="h-5 w-5 text-primary" />

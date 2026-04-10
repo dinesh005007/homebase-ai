@@ -60,10 +60,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 cursor-pointer",
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-150 cursor-pointer",
                 isActive
-                  ? "bg-sidebar-accent text-primary"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
               )}
             >
               <item.icon className="h-5 w-5 shrink-0" />
@@ -78,7 +78,7 @@ export function Sidebar() {
         {mounted && (
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent transition-colors duration-150 cursor-pointer"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors duration-150 cursor-pointer"
           >
             {theme === "dark" ? (
               <Sun className="h-5 w-5 shrink-0" />

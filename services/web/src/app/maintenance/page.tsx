@@ -153,7 +153,7 @@ export default function MaintenancePage() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             onSubmit={handleCreate}
-            className="rounded-xl border border-border bg-card p-5 space-y-3 overflow-hidden"
+            className="rounded-2xl border border-border bg-card p-5 space-y-3 overflow-hidden"
           >
             <div className="flex flex-col sm:flex-row gap-3">
               <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Task title" required className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring min-h-[44px]" />
@@ -182,11 +182,11 @@ export default function MaintenancePage() {
           { label: "Overdue", value: String(overdue.length), icon: AlertTriangle, color: "text-red-500" },
           { label: "Completed", value: String(completed.length), icon: CheckCircle2, color: "text-emerald-500" },
         ].map((stat) => (
-          <div key={stat.label} className="flex items-center gap-4 rounded-xl border border-border bg-card p-5">
+          <div key={stat.label} className="flex flex-col justify-between rounded-2xl border border-border bg-card p-4 sm:p-5">
             <stat.icon className={cn("h-5 w-5", stat.color)} />
-            <div>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
-              <p className="text-2xl font-bold font-mono">{stat.value}</p>
+            <div className="mt-4">
+              <p className="text-2xl font-bold font-mono tracking-tight">{stat.value}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{stat.label}</p>
             </div>
           </div>
         ))}
@@ -218,7 +218,7 @@ export default function MaintenancePage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 8 }}
               transition={{ duration: 0.2, delay: i * 0.03 }}
-              className="flex flex-wrap items-center gap-3 sm:gap-4 rounded-xl border border-border bg-card px-4 sm:px-5 py-3 sm:py-4 transition-all duration-200 hover:shadow-md hover:border-primary/20 min-h-[44px]"
+              className="flex flex-wrap items-center gap-3 sm:gap-4 rounded-2xl border border-border bg-card px-4 sm:px-5 py-3 sm:py-4 transition-colors duration-200 hover:bg-accent/50 min-h-[44px]"
             >
               <button
                 onClick={() => handleToggleComplete(task)}
@@ -256,9 +256,7 @@ export default function MaintenancePage() {
       {/* Empty state */}
       {!loading && tasks.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
-            <Wrench className="h-6 w-6 text-muted-foreground" />
-          </div>
+          <Wrench className="h-8 w-8 text-muted-foreground/20 mb-3" />
           <p className="text-sm font-medium">No maintenance tasks</p>
           <p className="text-xs text-muted-foreground mt-1">
             Add a task or seed seasonal tasks for your region

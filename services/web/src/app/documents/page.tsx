@@ -193,7 +193,7 @@ export default function DocumentsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.05 }}
         className={cn(
-          "rounded-xl border-2 border-dashed p-4 sm:p-6 transition-colors duration-200",
+          "rounded-2xl border-2 border-dashed p-4 sm:p-6 transition-colors duration-200",
           dragOver
             ? "border-primary bg-primary/5"
             : "border-border hover:border-primary/30"
@@ -378,12 +378,12 @@ export default function DocumentsPage() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2, delay: i * 0.03 }}
               className={cn(
-                "group relative rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:shadow-md hover:border-primary/20",
+                "group relative rounded-2xl border border-border bg-card p-4 transition-colors duration-200 hover:bg-accent/50",
                 deletingIds.has(doc.id) && "opacity-50 pointer-events-none"
               )}
             >
               {deletingIds.has(doc.id) && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-background/60 z-10">
+                <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-background/60 z-10">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span>Deleting...</span>
@@ -391,9 +391,7 @@ export default function DocumentsPage() {
                 </div>
               )}
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                  <File className="h-5 w-5 text-muted-foreground" />
-                </div>
+                <File className="h-5 w-5 text-muted-foreground shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{doc.title}</p>
                   <div className="mt-1 flex items-center gap-2">
@@ -439,9 +437,7 @@ export default function DocumentsPage() {
       {/* Empty State */}
       {filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
-            <FileText className="h-6 w-6 text-muted-foreground" />
-          </div>
+          <FileText className="h-8 w-8 text-muted-foreground/20 mb-3" />
           <p className="text-sm font-medium">No documents found</p>
           <p className="text-xs text-muted-foreground mt-1">
             Upload your first document above to get started

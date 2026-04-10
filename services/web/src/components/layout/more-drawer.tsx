@@ -56,7 +56,7 @@ export function MoreDrawer({
                   href={item.href}
                   onClick={() => onOpenChange(false)}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-colors duration-150 min-h-[44px]",
+                    "flex items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-medium transition-colors duration-150 min-h-[44px]",
                     isActive
                       ? "bg-primary/10 text-primary"
                       : "text-foreground hover:bg-accent"
@@ -75,7 +75,7 @@ export function MoreDrawer({
                   setTheme(theme === "dark" ? "light" : "dark");
                   onOpenChange(false);
                 }}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium text-foreground hover:bg-accent transition-colors duration-150 min-h-[44px] cursor-pointer"
+                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors duration-150 min-h-[44px] cursor-pointer"
               >
                 {theme === "dark" ? (
                   <Sun className="h-5 w-5 shrink-0" />
